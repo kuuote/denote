@@ -1,6 +1,6 @@
 import React from "./deps/react.ts";
 
-export function Line(props: { line: string }): JSX.Element {
+export function Line(props: { line: string; lnum: number }): JSX.Element {
   const str = props.line.trimStart();
   const indent = props.line.length - str.length;
   const textDOM = [...str].map((c, i) => (
@@ -8,7 +8,6 @@ export function Line(props: { line: string }): JSX.Element {
       {c}
     </span>
   ));
-  textDOM.push(<span className={`dummy c-${props.line.length}`}>&#8203;</span>);
 
   if (indent !== 0) {
     const indentWidth = `${1.5 * indent}em`;
@@ -41,7 +40,7 @@ export function Line(props: { line: string }): JSX.Element {
       </span>,
     );
     return (
-      <div className="line">
+      <div className={`line l-${props.lnum}`}>
         <span
           className="indent-mark"
           style={{ position: "absolute", width: indentWidth }}
@@ -54,5 +53,5 @@ export function Line(props: { line: string }): JSX.Element {
       </div>
     );
   }
-  return <div className="line">{textDOM}</div>;
+  return <div className={`line l-${props.lnum}`}>{textDOM}</div>;
 }
