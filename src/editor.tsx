@@ -4,13 +4,18 @@
 
 import React from "./deps/react.ts";
 import { Line } from "./line.tsx";
-import { Position } from "./types.tsx";
+import { Position, Selection } from "./types.tsx";
 
 const { useLayoutEffect, useState } = React;
 
 const defaultPosition: Position = {
   line: -1,
   column: -1,
+};
+
+const defaultSelection: Selection = {
+  start: defaultPosition,
+  end: defaultPosition,
 };
 
 function positionFromElement(
@@ -76,8 +81,14 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     top: 0,
     height: 0,
   });
+
+  // 選択によってカーソルが移動するため選択範囲の始点を格納しておく
+  const selectionStart = useRef(defaultPosition);
+
   const handleClick = (e: React.MouseEvent<Element>) => {
-    setCursor(positionFromElement(e.target as Element, e.clientX, e.clientY));
+    const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
+    setCursor(pos);
+    selectionStart.current = pos;
   };
 
   useLayoutEffect(() => {
@@ -105,11 +116,56 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     });
   }, [cursor]);
 
+  /* 選択範囲の描画 */
+
+  const [selection, setSelection] = useState(defaultSelection);
+
+  const [selectionView, setSelectionView] = useState({
+    top: { left: 0, top: 0, width: 0, height: 0 },
+    center: { left: 0, top: 0, width: 0, height: 0 },
+    bottom: { left: 0, top: 0, width: 0, height: 0 },
+  });
+
+  const handleMouseMove = (e: React.MouseEvent<Element>) => {
+    if (e.buttons !== 1) {
+      return;
+    }
+    const pos = positionFromElement(
+      e.target as Element,
+      e.clientX,
+      e.clientY,
+    );
+    if (pos.line === -1) {
+      return;
+    }
+    const selection = [pos, selectionStart.current].sort((a, b) => {
+      if (a.line !== b.line) {
+        return a.line - b.line;
+      }
+      return a.column - b.column;
+    });
+    if (
+      selection[0].line === selection[1].line &&
+      selection[1].column === selection[1].line
+    ) {
+      setSelection(defaultSelection);
+    } else {
+      setSelection({
+        start: selection[0],
+        end: selection[1],
+      });
+    }
+    setCursor(pos);
+  };
+
+
   return (
     <span
       style={{
         userSelect: "none",
       }}
+      onMouseDown={handleClick}
+      onMouseMove={handleMouseMove}
     >
       <span
         className="cursor"
@@ -123,7 +179,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
         }}
       >
       </span>
-      <span onClick={handleClick}>
+      <span>
         {props.lines.map((line, index) => <Line line={line} lnum={index} />)}
       </span>
     </span>
