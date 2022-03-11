@@ -8,18 +8,22 @@ import { Position } from "./types.tsx";
 
 const { useLayoutEffect, useState } = React;
 
+const defaultPosition: Position = {
+  line: -1,
+  column: -1,
+};
+
 function positionFromElement(
   element: Element,
   clientX: number,
   clientY: number,
 ): Position {
-  const not: Position = { line: -1, column: -1 };
   const line = element.closest(".line");
   const lineMatch = line?.className.match(/l-(\d+)/);
   const lineIndex = parseInt(String(lineMatch?.[1]));
   if (isNaN(lineIndex)) {
     console.log("isNaN(lineIndex)");
-    return not;
+    return defaultPosition;
   }
   const chars = Array.from(document.querySelectorAll(".char-index"))
     .map((element) => {
@@ -32,14 +36,14 @@ function positionFromElement(
     })
     .sort((a, b) => a.distance - b.distance);
   if (chars.length === 0) {
-    return not;
+    return defaultPosition;
   }
   const char = chars[0];
   const charMatch = char.element.className.match(/c-(\d+)/);
   const charIndex = parseInt(String(charMatch?.[1]));
   if (isNaN(charIndex)) {
     console.log("isNaN(charIndex)");
-    return not;
+    return defaultPosition;
   }
   return {
     line: lineIndex,
@@ -49,7 +53,7 @@ function positionFromElement(
 
 export function Editor(props: { lines: string[] }): JSX.Element {
   /* カーソルの描画 */
-  const [cursor, setCursor] = useState({ line: -1, column: -1 });
+  const [cursor, setCursor] = useState(defaultPosition);
   const [cursorView, setCursorView] = useState({
     left: 0,
     top: 0,
