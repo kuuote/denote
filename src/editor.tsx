@@ -86,7 +86,11 @@ export function Editor(props: { lines: string[] }): JSX.Element {
   }, [cursor]);
 
   return (
-    <>
+    <span
+      style={{
+        userSelect: "none",
+      }}
+    >
       <span
         className="cursor"
         style={{
@@ -102,6 +106,6 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       <span onClick={handleClick}>
         {props.lines.map((line, index) => <Line line={line} lnum={index} />)}
       </span>
-    </>
+    </span>
   );
 }
