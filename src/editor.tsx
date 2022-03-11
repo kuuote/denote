@@ -51,6 +51,23 @@ function positionFromElement(
   };
 }
 
+type Rect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+function getAbsoluteRect(element: Element): Rect {
+  const rect = element.getBoundingClientRect();
+  return {
+    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
 export function Editor(props: { lines: string[] }): JSX.Element {
   /* カーソルの描画 */
   const [cursor, setCursor] = useState(defaultPosition);
@@ -78,10 +95,9 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       });
       return;
     }
-    const rect = char.getBoundingClientRect();
-    const absoluteX = rect.left + window.scrollX +
-      (col === len ? rect.width : 0);
-    const absoluteY = rect.top + window.scrollY;
+    const rect = getAbsoluteRect(char);
+    const absoluteX = rect.left + (col === len ? rect.width : 0);
+    const absoluteY = rect.top;
     setCursorView({
       left: absoluteX,
       top: absoluteY,
