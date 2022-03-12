@@ -31,7 +31,8 @@ function positionFromElement(
     console.log("isNaN(lineIndex)");
     return defaultPosition;
   }
-  const chars = Array.from(document.querySelectorAll(".char-index"))
+  // lineIndexでチェックは済ませてるのでアサーションする
+  const chars = Array.from(line!.querySelectorAll(".char-index"))
     .map((element) => {
       const rect = element.getBoundingClientRect();
       const medX = rect.left + (rect.width / 2);
