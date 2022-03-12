@@ -89,7 +89,6 @@ export function SelectionView(props: { rect: Rect }) {
 }
 
 export function Editor(props: { lines: string[] }): JSX.Element {
-  /* カーソルの描画 */
   const [cursor, setCursor] = useState(defaultPosition);
   const [cursorView, setCursorView] = useState({
     left: 0,
@@ -99,11 +98,25 @@ export function Editor(props: { lines: string[] }): JSX.Element {
 
   // 選択によってカーソルが移動するため選択範囲の始点を格納しておく
   const selectionStart = useRef(defaultPosition);
+  const [selection, setSelection] = useState(defaultSelection);
+  const [selectionView, setSelectionView] = useState({
+    top: { left: 0, top: 0, width: 0, height: 0 },
+    center: { left: 0, top: 0, width: 0, height: 0 },
+    bottom: { left: 0, top: 0, width: 0, height: 0 },
+  });
+
+  /* カーソルの描画 */
 
   const handleClick = (e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
     setCursor(pos);
+    // 選択範囲の保持とリセット
     selectionStart.current = pos;
+    setSelectionView({
+      top: { left: 0, top: 0, width: 0, height: 0 },
+      center: { left: 0, top: 0, width: 0, height: 0 },
+      bottom: { left: 0, top: 0, width: 0, height: 0 },
+    });
   };
 
   useLayoutEffect(() => {
@@ -132,14 +145,6 @@ export function Editor(props: { lines: string[] }): JSX.Element {
   }, [cursor]);
 
   /* 選択範囲の描画 */
-
-  const [selection, setSelection] = useState(defaultSelection);
-
-  const [selectionView, setSelectionView] = useState({
-    top: { left: 0, top: 0, width: 0, height: 0 },
-    center: { left: 0, top: 0, width: 0, height: 0 },
-    bottom: { left: 0, top: 0, width: 0, height: 0 },
-  });
 
   const handleMouseMove = (e: React.MouseEvent<Element>) => {
     if (e.buttons !== 1) {
