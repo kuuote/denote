@@ -1,4 +1,4 @@
 #!/bin/bash -eu
 
-$(dirname $0)/bundle
+deno bundle --no-check src/main.tsx app.js
 deno run --no-check -A https://deno.land/std@0.129.0/http/file_server.ts
