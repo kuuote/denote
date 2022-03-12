@@ -32,7 +32,7 @@ function positionFromElement(
     return defaultPosition;
   }
   // lineIndexでチェックは済ませてるのでアサーションする
-  const chars = Array.from(line!.querySelectorAll(".char-index"))
+  const chars = Array.from(line!.getElementsByClassName("char-index"))
     .map((element) => {
       const rect = element.getBoundingClientRect();
       const medX = rect.left + (rect.width / 2);
@@ -73,6 +73,12 @@ function getAbsoluteRect(element: Element): Rect {
     width: rect.width,
     height: rect.height,
   };
+}
+
+function getCharDOM(line: number, column: number) {
+  return document.getElementsByClassName(
+    `l-${line} c-${column}`,
+  ).item(0);
 }
 
 export function SelectionView(props: { rect: Rect }) {
@@ -123,9 +129,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
   useLayoutEffect(() => {
     const len = props.lines[cursor.line]?.length ?? -1;
     const col = cursor.column;
-    const char = document.querySelector(
-      `.l-${cursor.line} .c-${Math.min(col, len - 1)}`,
-    );
+    const char = getCharDOM(cursor.line, Math.min(col, len - 1));
     if (char == null) {
       console.log("cursorView: char == null");
       setCursorView({
@@ -181,16 +185,12 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       (props.lines[selection.start.line]?.length ?? 0) - 1,
       selection.start.column,
     );
-    const start = document.querySelector(
-      `.l-${selection.start.line} .c-${startlen}`,
-    );
+    const start = getCharDOM(selection.start.line, startlen);
     const endlen = Math.min(
       (props.lines[selection.end.line]?.length ?? 0) - 1,
       selection.end.column,
     );
-    const end = document.querySelector(
-      `.l-${selection.end.line} .c-${endlen}`,
-    );
+    const end = getCharDOM(selection.end.line, endlen);
     if (!start || !end) {
       setSelectionView({
         top: { left: 0, top: 0, width: 0, height: 0 },
