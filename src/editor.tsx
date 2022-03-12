@@ -202,7 +202,9 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     const startRect = getAbsoluteRect(start);
     const endRect = getAbsoluteRect(end);
     // 要素のサイズ次第で微細な差があるため吸収
-    if (Math.abs(startRect.top - endRect.top) < startRect.height / 2) {
+    // これ、startRectとendRectが衝突してるみたいな条件でもいいかもしれん
+    // 単純な衝突判定じゃだめなので中間値を取るか
+    if (endRect.top < startRect.top + startRect.height / 2) {
       const view = {
         ...startRect,
         width: endRect.left + (endlen + 1 === selection.end.column
