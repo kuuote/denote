@@ -3,6 +3,7 @@
 /// <reference lib="dom" />
 
 import React from "./deps/react.ts";
+import { equal } from "./deps/std/asserts.ts";
 import { Line } from "./line.tsx";
 import { Position, Selection } from "./types.tsx";
 
@@ -158,10 +159,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       }
       return a.column - b.column;
     });
-    if (
-      selection[0].line === selection[1].line &&
-      selection[0].column === selection[1].column
-    ) {
+    if (equal(selection[0], selection[1])) {
       setSelection(defaultSelection);
     } else {
       setSelection({
