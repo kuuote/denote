@@ -177,7 +177,6 @@ export function Editor(props: { lines: string[] }): JSX.Element {
   };
 
   useLayoutEffect(() => {
-    const lineView = document.querySelector(".line");
     const startlen = Math.min(
       (props.lines[selection.start.line]?.length ?? 0) - 1,
       selection.start.column,
@@ -218,6 +217,32 @@ export function Editor(props: { lines: string[] }): JSX.Element {
         top: { left: 0, top: 0, width: 0, height: 0 },
         center: view,
         bottom: { left: 0, top: 0, width: 0, height: 0 },
+      });
+    } else {
+      const lineView = document.querySelector(".line");
+      const lineRect = getAbsoluteRect(lineView);
+      const topLeft = startRect.left +
+        (startlen + 1 === selection.start.column ? startRect.width : 0);
+      const top = {
+        ...startRect,
+        left: topLeft,
+        width: lineRect.left + lineRect.width - (topLeft),
+      };
+      const center = {
+        ...lineRect,
+        top: startRect.top + startRect.height,
+        height: endRect.top - (startRect.top + startRect.height),
+      };
+      const bottom = {
+        ...endRect,
+        left: lineRect.left,
+        width: endRect.left - lineRect.left +
+          (endlen + 1 === selection.end.column ? endRect.width : 0),
+      };
+      setSelectionView({
+        top,
+        center,
+        bottom,
       });
     }
   }, [selection]);
