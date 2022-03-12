@@ -6,7 +6,7 @@ import React from "./deps/react.ts";
 import { Line } from "./line.tsx";
 import { Position, Selection } from "./types.tsx";
 
-const { useLayoutEffect, useState } = React;
+const { useLayoutEffect, useState, useRef } = React;
 
 const defaultPosition: Position = {
   line: -1,
@@ -71,6 +71,20 @@ function getAbsoluteRect(element: Element): Rect {
     width: rect.width,
     height: rect.height,
   };
+}
+
+export function SelectionView(props: { rect: Rect }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        pointerEvents: "none",
+        backgroundColor: "green",
+        opacity: ".4",
+        ...props.rect,
+      }}
+    />
+  );
 }
 
 export function Editor(props: { lines: string[] }): JSX.Element {
@@ -158,6 +172,49 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     setCursor(pos);
   };
 
+  useLayoutEffect(() => {
+    const lineView = document.querySelector(".line");
+    const startlen = Math.min(
+      (props.lines[selection.start.line]?.length ?? 0) - 1,
+      selection.start.column,
+    );
+    const start = document.querySelector(
+      `.l-${selection.start.line} .c-${startlen}`,
+    );
+    const endlen = Math.min(
+      (props.lines[selection.end.line]?.length ?? 0) - 1,
+      selection.end.column,
+    );
+    const end = document.querySelector(
+      `.l-${selection.end.line} .c-${endlen}`,
+    );
+    if (!start || !end) {
+      setSelectionView({
+        top: { left: 0, top: 0, width: 0, height: 0 },
+        center: { left: 0, top: 0, width: 0, height: 0 },
+        bottom: { left: 0, top: 0, width: 0, height: 0 },
+      });
+      return;
+    }
+    const startRect = getAbsoluteRect(start);
+    const endRect = getAbsoluteRect(end);
+    // 要素のサイズ次第で微細な差があるため吸収
+    if (Math.abs(startRect.top - endRect.top) < startRect.height / 2) {
+      const view = {
+        ...startRect,
+        width: endRect.left + (endlen + 1 === selection.end.column
+          // 末尾にいる時は前の要素を参照しているためwidth分足す
+          ? endRect.width
+          : 0) -
+          startRect.left,
+      };
+      setSelectionView({
+        top: { left: 0, top: 0, width: 0, height: 0 },
+        center: view,
+        bottom: { left: 0, top: 0, width: 0, height: 0 },
+      });
+    }
+  }, [selection]);
 
   return (
     <span
@@ -178,6 +235,11 @@ export function Editor(props: { lines: string[] }): JSX.Element {
           height: `${cursorView.height}px`,
         }}
       >
+      </span>
+      <span>
+        <SelectionView rect={selectionView.top} />
+        <SelectionView rect={selectionView.center} />
+        <SelectionView rect={selectionView.bottom} />
       </span>
       <span>
         {props.lines.map((line, index) => <Line line={line} lnum={index} />)}
