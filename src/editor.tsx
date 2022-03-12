@@ -219,7 +219,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
         bottom: { left: 0, top: 0, width: 0, height: 0 },
       });
     } else {
-      const lineView = document.querySelector(".line");
+      const lineView = document.getElementsByClassName("line").item(0)!;
       const lineRect = getAbsoluteRect(lineView);
       const topLeft = startRect.left +
         (startlen + 1 === selection.start.column ? startRect.width : 0);
