@@ -146,7 +146,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     });
     if (
       selection[0].line === selection[1].line &&
-      selection[1].column === selection[1].line
+      selection[0].column === selection[1].column
     ) {
       setSelection(defaultSelection);
     } else {
