@@ -75,10 +75,10 @@ function getAbsoluteRect(element: Element): Rect {
   };
 }
 
-function getCharDOM(line: number, column: number) {
-  return document.getElementsByClassName(
-    `l-${line} c-${column}`,
-  ).item(0);
+function getCharDOM(line: number, column: number): Element | undefined {
+  const l = document.getElementsByClassName(`l-${line}`);
+  const c = l[0]?.getElementsByClassName(`c-${column}`);
+  return c?.[0];
 }
 
 export function SelectionView(props: { rect: Rect }) {
