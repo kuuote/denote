@@ -19,6 +19,10 @@ const defaultSelection: Selection = {
   end: defaultPosition,
 };
 
+function clamp(min: number, num: number, max: number) {
+  return Math.max(min, Math.min(num, max));
+}
+
 function positionFromElement(
   element: Element,
   clientX: number,
@@ -128,8 +132,10 @@ export function Editor(props: { lines: string[] }): JSX.Element {
 
   useLayoutEffect(() => {
     const len = props.lines[cursor.line]?.length ?? -1;
-    const col = cursor.column;
-    const char = getCharDOM(cursor.line, Math.min(col, len - 1));
+    // カーソル行が末尾にある際は該当する DOM が無いので len - 1 で丸める
+    // 単純に len - 1 するだけでは 空行の時に -1 になってしまうため 0 で丸める
+    const col = clamp(0, cursor.column, len - 1);
+    const char = getCharDOM(cursor.line, col);
     if (char == null) {
       console.log("cursorView: char == null");
       setCursorView({
@@ -140,7 +146,8 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       return;
     }
     const rect = getAbsoluteRect(char);
-    const absoluteX = rect.left + (col === len ? rect.width : 0);
+    // 末尾の時は要素の幅を足すことで右端にカーソルが置かれているように見せる
+    const absoluteX = rect.left + (cursor.column === len ? rect.width : 0);
     const absoluteY = rect.top;
     setCursorView({
       left: absoluteX,
@@ -181,16 +188,14 @@ export function Editor(props: { lines: string[] }): JSX.Element {
   };
 
   useLayoutEffect(() => {
-    const startlen = Math.min(
-      (props.lines[selection.start.line]?.length ?? 0) - 1,
-      selection.start.column,
-    );
-    const start = getCharDOM(selection.start.line, startlen);
-    const endlen = Math.min(
-      (props.lines[selection.end.line]?.length ?? 0) - 1,
-      selection.end.column,
-    );
-    const end = getCharDOM(selection.end.line, endlen);
+    const startlen = props.lines[selection.start.line]?.length ?? -1;
+    const startcol = clamp(0, selection.start.column, startlen - 1);
+    const start = getCharDOM(selection.start.line, startcol);
+
+    const endlen = props.lines[selection.end.line]?.length ?? -1;
+    const endcol = clamp(0, selection.end.column, endlen - 1);
+    const end = getCharDOM(selection.end.line, endcol);
+
     if (!start || !end) {
       setSelectionView({
         top: { left: 0, top: 0, width: 0, height: 0 },
@@ -207,7 +212,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
     if (endRect.top < startRect.top + startRect.height / 2) {
       const view = {
         ...startRect,
-        width: endRect.left + (endlen + 1 === selection.end.column
+        width: endRect.left + (selection.end.column === endlen
           // 末尾にいる時は前の要素を参照しているためwidth分足す
           ? endRect.width
           : 0) -
@@ -222,7 +227,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
       const lineView = document.getElementsByClassName("line").item(0)!;
       const lineRect = getAbsoluteRect(lineView);
       const topLeft = startRect.left +
-        (startlen + 1 === selection.start.column ? startRect.width : 0);
+        (selection.start.column === startlen ? startRect.width : 0);
       const top = {
         ...startRect,
         left: topLeft,
@@ -237,7 +242,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
         ...endRect,
         left: lineRect.left,
         width: endRect.left - lineRect.left +
-          (endlen + 1 === selection.end.column ? endRect.width : 0),
+          (selection.end.column === endlen ? endRect.width : 0),
       };
       setSelectionView({
         top,
