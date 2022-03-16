@@ -8,6 +8,9 @@ export function Line(props: { line: string; lnum: number }): JSX.Element {
       {c}
     </span>
   ));
+  if (textDOM.length === 0) {
+    textDOM.push(<span className="char-index c-0">&#8203;</span>);
+  }
 
   if (indent !== 0) {
     const indentWidth = `${1.5 * indent}em`;
