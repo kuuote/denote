@@ -2,13 +2,16 @@
 /// <reference lib="esnext" />
 /// <reference lib="dom" />
 
-import React from "./deps/react.ts";
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
 import { clamp } from "./util.ts";
 import { LineView } from "./line.tsx";
 import { Position, Selection } from "./types.tsx";
-
-const { useLayoutEffect, useState, useRef } = React;
 
 const defaultPosition: Position = {
   line: -1,
@@ -115,7 +118,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
 
   /* カーソルの描画 */
 
-  const handleClick = (e: React.MouseEvent<Element>) => {
+  const handleClick = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
     setCursor(pos);
     // 選択範囲の保持とリセット
@@ -125,7 +128,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
       center: { left: 0, top: 0, width: 0, height: 0 },
       bottom: { left: 0, top: 0, width: 0, height: 0 },
     });
-  };
+  }, []);
 
   useLayoutEffect(() => {
     const len = props.lines[cursor.line]?.length ?? -1;
@@ -155,7 +158,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
 
   /* 選択範囲の描画 */
 
-  const handleMouseMove = (e: React.MouseEvent<Element>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<Element>) => {
     if (e.buttons !== 1) {
       return;
     }
@@ -164,9 +167,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
       e.clientX,
       e.clientY,
     );
-    if (pos.line === -1) {
-      return;
-    }
+    if (pos.line === -1) return;
     const selection = [pos, selectionStart.current].sort((a, b) => {
       if (a.line !== b.line) {
         return a.line - b.line;
@@ -182,7 +183,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
       });
     }
     setCursor(pos);
-  };
+  }, []);
 
   useLayoutEffect(() => {
     const startlen = props.lines[selection.start.line]?.length ?? -1;
