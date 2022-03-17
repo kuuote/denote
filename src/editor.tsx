@@ -275,10 +275,12 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
         <SelectionView rect={selectionView.bottom} />
       </span>
       <span>
-        {props.lines.map((line, index) => <LineView
-          line={line}
-          lnum={index}
-        />)}
+        {props.lines.map((line, index) => (
+          <LineView
+            line={line}
+            lnum={index}
+          />
+        ))}
       </span>
     </span>
   );
