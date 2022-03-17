@@ -4,6 +4,7 @@
 
 import React from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
+import { clamp } from "./util.ts";
 import { LineView } from "./line.tsx";
 import { Position, Selection } from "./types.tsx";
 
@@ -18,10 +19,6 @@ const defaultSelection: Selection = {
   start: defaultPosition,
   end: defaultPosition,
 };
-
-function clamp(min: number, num: number, max: number) {
-  return Math.max(min, Math.min(num, max));
-}
 
 function positionFromElement(
   element: Element,
@@ -278,7 +275,12 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
         <SelectionView rect={selectionView.bottom} />
       </span>
       <span>
-        {props.lines.map((line, index) => <LineView line={line} lnum={index} />)}
+        {props.lines.map((line, index) => (
+          <LineView
+            line={line}
+            lnum={index}
+          />
+        ))}
       </span>
     </span>
   );

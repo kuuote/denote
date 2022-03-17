@@ -17,3 +17,5 @@ jobs:
         run: deno lint
       - name: Run type check
         run: deno cache ./src/main.tsx
+      - name: Run test
+        run: deno test
