@@ -4,7 +4,7 @@
 
 import React from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
-import { Line } from "./line.tsx";
+import { LineView } from "./line.tsx";
 import { Position, Selection } from "./types.tsx";
 
 const { useLayoutEffect, useState, useRef } = React;
@@ -99,7 +99,7 @@ export function SelectionView(props: { rect: Rect }) {
   );
 }
 
-export function Editor(props: { lines: string[] }): JSX.Element {
+export function EditorView(props: { lines: string[] }): JSX.Element {
   const [cursor, setCursor] = useState(defaultPosition);
   const [cursorView, setCursorView] = useState({
     left: 0,
@@ -278,7 +278,7 @@ export function Editor(props: { lines: string[] }): JSX.Element {
         <SelectionView rect={selectionView.bottom} />
       </span>
       <span>
-        {props.lines.map((line, index) => <Line line={line} lnum={index} />)}
+        {props.lines.map((line, index) => <LineView line={line} lnum={index} />)}
       </span>
     </span>
   );

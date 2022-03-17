@@ -1,6 +1,6 @@
 import React from "./deps/react.ts";
 
-export function Line(props: { line: string; lnum: number }): JSX.Element {
+export function LineView(props: { line: string; lnum: number }): JSX.Element {
   const str = props.line.trimStart();
   const indent = props.line.length - str.length;
   const textDOM = [...str].map((c, i) => (
