@@ -11,7 +11,7 @@ import React, {
 import { equal } from "./deps/std/asserts.ts";
 import { clamp } from "./util.ts";
 import { LineView } from "./line.tsx";
-import { Position, Selection } from "./types.tsx";
+import { Position, Selection } from "./types.ts";
 
 const defaultPosition: Position = {
   line: -1,
