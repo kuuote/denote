@@ -1,0 +1,8 @@
+[未解決]
+
+[行にIDを振る]ための下準備
+
+type Line = {
+	text: string;
+	id: string;
+}
