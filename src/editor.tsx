@@ -252,20 +252,15 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
 
   return (
     <span
-      style={{
-        userSelect: "none",
-      }}
+      className="editor"
       onMouseDown={handleClick}
       onMouseMove={handleMouseMove}
     >
       <span
         className="cursor"
         style={{
-          position: "absolute",
-          backgroundColor: "black",
           left: cursorView.left,
           top: cursorView.top,
-          width: "1px",
           height: `${cursorView.height}px`,
         }}
       >

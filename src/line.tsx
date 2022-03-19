@@ -18,35 +18,20 @@ export function LineView(props: { line: string; lnum: number }): JSX.Element {
       Array(indent),
       (_, i) => (
         <span className={`char-index c-${i}`}>
-          <span
-            className="pad"
-            style={{ display: "inline-block", width: "1.5em", height: "1em" }}
-          >
+          <span className="pad">
           </span>
         </span>
       ),
     );
     indentDOM.push(
-      <span
-        className="dot"
-        style={{
-          display: "block",
-          position: "absolute",
-          right: "9px",
-          top: "10px",
-          width: "6px",
-          height: "6px",
-          borderRadius: "50%",
-          backgroundColor: "black",
-        }}
-      >
+      <span className="dot">
       </span>,
     );
     return (
       <div className={`line l-${props.lnum}`}>
         <span
           className="indent-mark"
-          style={{ position: "absolute", width: indentWidth }}
+          style={{ width: indentWidth }}
         >
           {indentDOM}
         </span>

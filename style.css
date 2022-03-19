@@ -1,0 +1,30 @@
+.editor {
+  user-select: none;
+}
+
+.editor.cursor {
+  position: absolute;
+  background-color: black;
+  width: 1px;
+}
+
+.indent-mark {
+  position: absolute;
+}
+
+.indent-mark .pad {
+  display: inline-block;
+  width: 1.5em;
+  height: 1em;
+}
+
+.indent-mark .dot {
+  position: absolute;
+  display: block;
+  right: 9px;
+  top: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: black;
+}
