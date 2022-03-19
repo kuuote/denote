@@ -1,8 +1,9 @@
 import React from "./deps/react.ts";
+import { Line } from "./types.ts";
 
-export function LineView(props: { line: string; lnum: number }): JSX.Element {
-  const str = props.line.trimStart();
-  const indent = props.line.length - str.length;
+export function LineView(props: { line: Line; lnum: number }): JSX.Element {
+  const str = props.line.text.trimStart();
+  const indent = props.line.text.length - str.length;
   const textDOM = [...str].map((c, i) => (
     <span className={`char-index c-${i + indent}`}>
       {c}

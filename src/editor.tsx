@@ -9,9 +9,9 @@ import React, {
   useState,
 } from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
-import { clamp } from "./util.ts";
 import { LineView } from "./line.tsx";
-import { Position, Selection } from "./types.ts";
+import { Line, Position, Selection } from "./types.ts";
+import { clamp } from "./util.ts";
 
 const defaultPosition: Position = {
   line: -1,
@@ -99,7 +99,9 @@ export function SelectionView(props: { rect: Rect }) {
   );
 }
 
-export function EditorView(props: { lines: string[] }): JSX.Element {
+export function EditorView(props: { lines: Line[] }): JSX.Element {
+  const { lines } = props;
+
   const [cursor, setCursor] = useState(defaultPosition);
   const [cursorView, setCursorView] = useState({
     left: 0,
@@ -131,7 +133,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
   }, []);
 
   useLayoutEffect(() => {
-    const len = props.lines[cursor.line]?.length ?? -1;
+    const len = lines[cursor.line]?.text.length ?? -1;
     // カーソル行が末尾にある際は該当する DOM が無いので len - 1 で丸める
     // 単純に len - 1 するだけでは 空行の時に -1 になってしまうため 0 で丸める
     const col = clamp(0, cursor.column, len - 1);
@@ -186,11 +188,11 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
   }, []);
 
   useLayoutEffect(() => {
-    const startlen = props.lines[selection.start.line]?.length ?? -1;
+    const startlen = lines[selection.start.line]?.text.length ?? -1;
     const startcol = clamp(0, selection.start.column, startlen - 1);
     const start = getCharDOM(selection.start.line, startcol);
 
-    const endlen = props.lines[selection.end.line]?.length ?? -1;
+    const endlen = lines[selection.end.line]?.text.length ?? -1;
     const endcol = clamp(0, selection.end.column, endlen - 1);
     const end = getCharDOM(selection.end.line, endcol);
 
@@ -271,7 +273,7 @@ export function EditorView(props: { lines: string[] }): JSX.Element {
         <SelectionView rect={selectionView.bottom} />
       </span>
       <span>
-        {props.lines.map((line, index) => (
+        {lines.map((line, index) => (
           <LineView
             line={line}
             lnum={index}
