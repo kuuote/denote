@@ -11,4 +11,4 @@ export type Selection = {
 export type Line = {
   text: string;
   id: string;
-}
+};

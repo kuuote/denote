@@ -272,6 +272,22 @@ export function EditorView(props: { lines: Line[] }): JSX.Element {
         <SelectionView rect={selectionView.center} />
         <SelectionView rect={selectionView.bottom} />
       </span>
+      <textarea
+        className="input"
+        style={{
+          position: "absolute",
+          left: cursorView.left,
+          top: cursorView.top,
+          width: 1,
+          height: cursorView.height,
+          lineHeight: cursorView.height,
+          opacity: 0,
+        }}
+        onChange={onChange}
+        spellCheck="false"
+        wrap="off"
+      >
+      </textarea>
       <span>
         {lines.map((line, index) => (
           <LineView

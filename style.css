@@ -2,10 +2,23 @@
   user-select: none;
 }
 
-.editor.cursor {
+.editor .cursor {
   position: absolute;
   background-color: black;
   width: 1px;
+}
+
+.editor .input {
+  position: absolute;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: text;
+  outline: none;
+  overflow: hidden;
+  padding: 0;
+  pointer-events: none;
+  resize: none;
 }
 
 .indent-mark {
