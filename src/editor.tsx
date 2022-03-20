@@ -4,6 +4,7 @@
 
 import React, {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -89,13 +90,13 @@ export class Editor {
     this.callback = callback;
   }
 
-  setCursor(cursor?: Position) {
-    this.cursor = cursor ?? defaultPosition;
+  setCursor(cursor: Position) {
+    this.cursor = cursor;
     this.callback();
   }
 
-  setSelection(selection?: Selection) {
-    this.selection = selection ?? defaultSelection;
+  setSelection(selection: Selection) {
+    this.selection = selection;
     this.callback();
   }
 
@@ -231,10 +232,17 @@ export function SelectionView(props: { rect: Rect }) {
   );
 }
 
-export function EditorView(props: { lines: Line[] }): JSX.Element {
-  const { lines } = props;
+export function EditorView(props: { editor: Editor }): JSX.Element {
+  const { editor } = props;
+  const { cursor, selection } = editor;
 
-  const [cursor, setCursor] = useState(defaultPosition);
+  // いい方法があったら差し替える
+  const [, reRender] = useState(1);
+  useEffect(() => {
+    editor.setCallback(() => reRender(Math.random()));
+  }, []);
+
+  const lines = props.editor.getLines();
   const [cursorView, setCursorView] = useState({
     left: 0,
     top: 0,
@@ -243,7 +251,6 @@ export function EditorView(props: { lines: Line[] }): JSX.Element {
 
   // 選択によってカーソルが移動するため選択範囲の始点を格納しておく
   const selectionStart = useRef(defaultPosition);
-  const [selection, setSelection] = useState(defaultSelection);
   const [selectionView, setSelectionView] = useState({
     top: { left: 0, top: 0, width: 0, height: 0 },
     center: { left: 0, top: 0, width: 0, height: 0 },
@@ -254,7 +261,7 @@ export function EditorView(props: { lines: Line[] }): JSX.Element {
 
   const handleClick = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
-    setCursor(pos);
+    editor.setCursor(pos);
     // 選択範囲の保持とリセット
     selectionStart.current = pos;
     setSelectionView({
@@ -309,14 +316,14 @@ export function EditorView(props: { lines: Line[] }): JSX.Element {
       return a.column - b.column;
     });
     if (equal(selection[0], selection[1])) {
-      setSelection(defaultSelection);
+      editor.setSelection(defaultSelection);
     } else {
-      setSelection({
+      editor.setSelection({
         start: selection[0],
         end: selection[1],
       });
     }
-    setCursor(pos);
+    editor.setCursor(pos);
   }, []);
 
   useLayoutEffect(() => {
@@ -383,6 +390,20 @@ export function EditorView(props: { lines: Line[] }): JSX.Element {
       });
     }
   }, [selection]);
+
+  /* handling textarea */
+
+  const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    editor.input(e.currentTarget.value);
+    e.currentTarget.value = "";
+  }, []);
+
+  useLayoutEffect(() => {
+    const textarea = document.getElementsByTagName("textarea")[0];
+    if (textarea && cursorView.left > 0) {
+      setTimeout(() => textarea.focus(), 0);
+    }
+  }, [cursorView]);
 
   return (
     <span

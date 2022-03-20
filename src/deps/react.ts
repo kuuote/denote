@@ -1,6 +1,7 @@
 export {
   default,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
