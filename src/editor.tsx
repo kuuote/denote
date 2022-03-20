@@ -9,8 +9,10 @@ import React, {
   useState,
 } from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
+import * as uuid from "./deps/std/uuidv1.ts";
 import { LineView } from "./line.tsx";
 import { Line, Position, Selection } from "./types.ts";
+import { Change, Commit, Revision } from "./types/commit.ts";
 import { clamp } from "./util.ts";
 
 const defaultPosition: Position = {
@@ -22,6 +24,136 @@ const defaultSelection: Selection = {
   start: defaultPosition,
   end: defaultPosition,
 };
+
+/* Editor logic */
+
+function applyCommit(revision: Revision, commit: Commit): Revision {
+  if (revision.id !== commit.parentID) {
+    throw Error("commit rejected");
+  }
+  const lines = [...revision.lines];
+  for (const change of commit.changes) {
+    const idx = lines.findIndex((line) => line.id === change.id);
+    if (change.type === "insert") {
+      lines.splice(idx === -1 ? lines.length : idx, 0, {
+        text: change.text,
+        id: change.id,
+      });
+    } else if (change.type === "update") {
+      lines[idx] = { ...lines[idx], text: change.text };
+    } else if (change.type === "delete") {
+      lines.splice(idx, 1);
+    }
+  }
+  return {
+    id: commit.id,
+    previous: revision,
+    lines,
+  };
+}
+
+class CoreEditor {
+  revision: Revision;
+
+  constructor(revision: Revision) {
+    this.revision = revision;
+  }
+
+  apply(changes: Change[]) {
+    this.revision = applyCommit(this.revision, {
+      id: String(uuid.generate()),
+      parentID: this.revision.id,
+      changes,
+    });
+  }
+}
+
+export class Editor {
+  #core: CoreEditor;
+  cursor = defaultPosition;
+  selection = defaultSelection;
+
+  // rendering callback
+  // must be set on view
+  callback = () => console.log("callback was not defined");
+
+  constructor(revision: Revision) {
+    this.#core = new CoreEditor(revision);
+  }
+
+  getLines(): Line[] {
+    return this.#core.revision.lines;
+  }
+
+  setCallback(callback: () => void) {
+    this.callback = callback;
+  }
+
+  setCursor(cursor?: Position) {
+    this.cursor = cursor ?? defaultPosition;
+    this.callback();
+  }
+
+  setSelection(selection?: Selection) {
+    this.selection = selection ?? defaultSelection;
+    this.callback();
+  }
+
+  input(str: string) {
+    const changes: Change[] = [];
+    const lines = this.getLines();
+    let cursorLine = lines[this.cursor.line];
+    if (cursorLine == null) return;
+    const insertLineID = lines[this.cursor.line + 1]?.id ??
+      "_end";
+    const cursor = { ...this.cursor };
+    for (
+      const { line, newline } of str.split("\n")
+        .map((line, index, self) => ({
+          line,
+          newline: index !== self.length - 1,
+        }))
+    ) {
+      const a = cursorLine.text.slice(0, cursor.column);
+      const b = cursorLine.text.slice(cursor.column, cursorLine.text.length);
+      if (newline) {
+        const text = a + line;
+        const update: Change = {
+          type: "update",
+          id: cursorLine.id,
+          text,
+        };
+        const indentLength = a.length - a.trimStart().length;
+        const insert: Change = {
+          type: "insert",
+          id: String(uuid.generate()),
+          text: a.slice(0, indentLength) + b,
+          previousID: insertLineID,
+        };
+        changes.push(update, insert);
+        cursor.line += 1;
+        cursor.column = indentLength;
+        cursorLine = {
+          id: insert.id,
+          text: insert.text,
+        };
+      } else {
+        const update: Change = {
+          type: "update",
+          id: cursorLine.id,
+          text: a + line + b,
+        };
+        changes.push(update);
+        cursor.column += line.length;
+      }
+    }
+    this.#core.apply(changes);
+    this.cursor = cursor;
+    this.callback();
+  }
+}
+
+/* Editor View */
 
 function positionFromElement(
   element: Element,
