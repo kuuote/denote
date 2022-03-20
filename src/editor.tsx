@@ -38,7 +38,7 @@ function applyCommit(revision: Revision, commit: Commit): Revision {
     if (change.type === "insert") {
       lines.splice(idx === -1 ? lines.length : idx, 0, {
         text: change.text,
-        id: change.id,
+        id: change.newlineID,
       });
     } else if (change.type === "update") {
       lines[idx] = { ...lines[idx], text: change.text };
@@ -127,15 +127,15 @@ export class Editor {
         const indentLength = a.length - a.trimStart().length;
         const insert: Change = {
           type: "insert",
-          id: String(uuid.generate()),
+          id: insertLineID,
           text: a.slice(0, indentLength) + b,
-          previousID: insertLineID,
+          newlineID: String(uuid.generate()),
         };
         changes.push(update, insert);
         cursor.line += 1;
         cursor.column = indentLength;
         cursorLine = {
-          id: insert.id,
+          id: insert.newlineID,
           text: insert.text,
         };
       } else {

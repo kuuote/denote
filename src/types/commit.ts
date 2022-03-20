@@ -6,7 +6,7 @@ type Insert = {
   type: "insert";
   id: LineID;
   text: string;
-  previousID: LineID;
+  newlineID: LineID;
 };
 
 type Update = {
