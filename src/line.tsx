@@ -10,7 +10,7 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
     </span>
   ));
   if (textDOM.length === 0) {
-    textDOM.push(<span className="char-index c-0">&#8203;</span>);
+    textDOM.push(<span className="char-index dummy c-0">&#8203;</span>);
   }
 
   if (indent !== 0) {

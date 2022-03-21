@@ -183,6 +183,14 @@ function positionFromElement(
     return defaultPosition;
   }
   const char = chars[0];
+  // Must always zero index if empty line
+  // see line.tsx
+  if (char.element.className.includes("dummy")) {
+    return {
+      line: lineIndex,
+      column: 0,
+    };
+  }
   const charMatch = char.element.className.match(/c-(\d+)/);
   const charIndex = parseInt(String(charMatch?.[1]));
   if (isNaN(charIndex)) {
