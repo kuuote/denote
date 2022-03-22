@@ -1,3 +1,7 @@
+/// <reference no-default-lib="true" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+
 import React from "./deps/react.ts";
 import { Line, Position } from "./types.ts";
 
