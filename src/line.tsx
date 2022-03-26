@@ -64,35 +64,40 @@ export function positionFromElement(
   };
 }
 
+const Char: React.FC<{ column: number; dummy?: boolean }> = (
+  { column, children, dummy },
+) => (
+  <span className={`char-index${dummy ? " dummy" : ""} c-${column}`}>
+    {children}
+  </span>
+);
+
+const Line: React.FC<{ line: number }> = (
+  { line, children },
+) => (
+  <div className={`line l-${line}`}>
+    {children}
+  </div>
+);
+
 export function LineView(props: { line: Line; lnum: number }): JSX.Element {
   const str = props.line.text.trimStart();
   const indent = countIndent(props.line.text);
-  const textDOM = [...str].map((c, i) => (
-    <span className={`char-index c-${i + indent}`}>
-      {c}
-    </span>
-  ));
+  const textDOM = [...str].map((c, i) => <Char column={i + indent}>{c}</Char>);
   if (textDOM.length === 0) {
-    textDOM.push(<span className="char-index dummy c-0">&#8203;</span>);
+    textDOM.push(<Char column={0} dummy>&#8203;</Char>);
   }
 
   if (indent !== 0) {
     const indentWidth = `${1.5 * indent}em`;
-    const indentDOM = Array.from(
-      Array(indent),
-      (_, i) => (
-        <span className={`char-index c-${i}`}>
-          <span className="pad">
-          </span>
-        </span>
-      ),
-    );
-    indentDOM.push(
-      <span className="dot">
-      </span>,
-    );
+    const indentDOM = Array.from(Array(indent), (_, i) => (
+      <Char column={i}>
+        <span className="pad" />
+      </Char>
+    ));
+    indentDOM.push(<span className="dot" />);
     return (
-      <div className={`line l-${props.lnum}`}>
+      <Line line={props.lnum}>
         <span
           className="indent-mark"
           style={{ width: indentWidth }}
@@ -102,8 +107,8 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
         <span className="indent" style={{ marginLeft: indentWidth }}>
           {textDOM}
         </span>
-      </div>
+      </Line>
     );
   }
-  return <div className={`line l-${props.lnum}`}>{textDOM}</div>;
+  return <Line line={props.lnum}>{textDOM}</Line>;
 }
