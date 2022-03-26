@@ -83,18 +83,25 @@ const Line: React.FC<{ line: number }> = (
 export function LineView(props: { line: Line; lnum: number }): JSX.Element {
   const str = props.line.text.trimStart();
   const indent = countIndent(props.line.text);
-  const textDOM = [...str].map((c, i) => <Char column={i + indent}>{c}</Char>);
+  const textDOM = [...str].map((c, i) => (
+    <Char key={`${i}-${c}`} column={i + indent}>
+      {c}
+    </Char>
+  ));
   if (textDOM.length === 0) {
     textDOM.push(<Char column={0} dummy>&#8203;</Char>);
   }
 
   if (indent !== 0) {
     const indentWidth = `${1.5 * indent}em`;
-    const indentDOM = Array.from(Array(indent), (_, i) => (
-      <Char column={i}>
-        <span className="pad" />
-      </Char>
-    ));
+    const indentDOM = Array.from(
+      Array(indent),
+      (_, i) => (
+        <Char key={i} column={i}>
+          <span className="pad" />
+        </Char>
+      ),
+    );
     indentDOM.push(<span className="dot" />);
     return (
       <Line line={props.lnum}>

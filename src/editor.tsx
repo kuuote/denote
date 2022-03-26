@@ -285,6 +285,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
       <span>
         {lines.map((line, index) => (
           <LineView
+            key={line.id}
             line={line}
             lnum={index}
           />
