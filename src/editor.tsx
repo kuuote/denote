@@ -128,8 +128,10 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     bottom: { left: 0, top: 0, width: 0, height: 0 },
   });
 
-  /* カーソルの描画 */
-
+  /** クリックした位置にカーソルを動かす
+   *
+   * 同時に選択範囲を消す
+   */
   const handleClick = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
     editor.setCursor(pos);
@@ -142,6 +144,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     });
   }, []);
 
+  // カーソルの描画
   useLayoutEffect(() => {
     const len = lines[cursor.line]?.text.length ?? -1;
     // カーソル行が末尾にある際は該当する DOM が無いので len - 1 で丸める
@@ -168,8 +171,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     });
   }, [cursor]);
 
-  /* 選択範囲の描画 */
-
+  /** カーソル移動で選択範囲を変更する */
   const handleMouseMove = useCallback((e: React.MouseEvent<Element>) => {
     if (e.buttons !== 1) {
       return;
@@ -197,6 +199,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     editor.setCursor(pos);
   }, []);
 
+  // 選択範囲の描画
   useLayoutEffect(() => {
     const startlen = lines[selection.start.line]?.text.length ?? -1;
     const startcol = clamp(0, selection.start.column, startlen - 1);
