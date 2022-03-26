@@ -17,15 +17,15 @@ import {
   LineView,
   positionFromElement,
 } from "./line.tsx";
+import {
+  defaultSelection,
+  defaultSelectionProps,
+  Selection,
+} from "./selection.tsx";
 import { getAbsoluteRect, Rect } from "./rect.ts";
-import { Line, Position, Selection } from "./types.ts";
+import { Line, Position } from "./types.ts";
 import { applyCommit, makeChanges, Revision } from "./commit.ts";
 import { clamp, countIndent } from "./util.ts";
-
-const defaultSelection: Selection = {
-  start: defaultPosition,
-  end: defaultPosition,
-};
 
 /* Editor logic */
 export class Editor {
@@ -87,22 +87,6 @@ export class Editor {
   }
 }
 
-/* Editor View */
-
-export function SelectionView(props: { rect: Rect }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        pointerEvents: "none",
-        backgroundColor: "green",
-        opacity: ".4",
-        ...props.rect,
-      }}
-    />
-  );
-}
-
 export function EditorView(props: { editor: Editor }): JSX.Element {
   const { editor } = props;
   const { cursor, selection } = editor;
@@ -122,11 +106,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
 
   // 選択によってカーソルが移動するため選択範囲の始点を格納しておく
   const selectionStart = useRef(defaultPosition);
-  const [selectionView, setSelectionView] = useState({
-    top: { left: 0, top: 0, width: 0, height: 0 },
-    center: { left: 0, top: 0, width: 0, height: 0 },
-    bottom: { left: 0, top: 0, width: 0, height: 0 },
-  });
+  const [selectionView, setSelectionView] = useState(defaultSelectionProps);
 
   /** クリックした位置にカーソルを動かす
    *
@@ -137,11 +117,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     editor.setCursor(pos);
     // 選択範囲の保持とリセット
     selectionStart.current = pos;
-    setSelectionView({
-      top: { left: 0, top: 0, width: 0, height: 0 },
-      center: { left: 0, top: 0, width: 0, height: 0 },
-      bottom: { left: 0, top: 0, width: 0, height: 0 },
-    });
+    setSelectionView(defaultSelectionProps);
   }, []);
 
   // カーソルの描画
@@ -210,11 +186,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     const end = getCharDOM(selection.end.line, endcol);
 
     if (!start || !end) {
-      setSelectionView({
-        top: { left: 0, top: 0, width: 0, height: 0 },
-        center: { left: 0, top: 0, width: 0, height: 0 },
-        bottom: { left: 0, top: 0, width: 0, height: 0 },
-      });
+      setSelectionView(defaultSelectionProps);
       return;
     }
     const startRect = getAbsoluteRect(start);
@@ -232,9 +204,8 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
           startRect.left,
       };
       setSelectionView({
-        top: { left: 0, top: 0, width: 0, height: 0 },
+        ...defaultSelectionProps,
         center: view,
-        bottom: { left: 0, top: 0, width: 0, height: 0 },
       });
     } else {
       const lineView = document.getElementsByClassName("line").item(0)!;
@@ -294,11 +265,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
         }}
       >
       </span>
-      <span>
-        <SelectionView rect={selectionView.top} />
-        <SelectionView rect={selectionView.center} />
-        <SelectionView rect={selectionView.bottom} />
-      </span>
+      <Selection {...selectionView} />
       <textarea
         className="input"
         style={{
