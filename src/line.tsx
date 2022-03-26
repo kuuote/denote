@@ -4,6 +4,7 @@
 
 import React from "./deps/react.ts";
 import { Line, Position } from "./types.ts";
+import { countIndent } from "./util.ts";
 
 export function getCharDOM(line: number, column: number): Element | undefined {
   const l = document.getElementsByClassName(`l-${line}`);
@@ -65,7 +66,7 @@ export function positionFromElement(
 
 export function LineView(props: { line: Line; lnum: number }): JSX.Element {
   const str = props.line.text.trimStart();
-  const indent = props.line.text.length - str.length;
+  const indent = countIndent(props.line.text);
   const textDOM = [...str].map((c, i) => (
     <span className={`char-index c-${i + indent}`}>
       {c}

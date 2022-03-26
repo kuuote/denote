@@ -20,7 +20,7 @@ import {
 import { getAbsoluteRect, Rect } from "./rect.ts";
 import { Line, Position, Selection } from "./types.ts";
 import { applyCommit, makeChanges, Revision } from "./commit.ts";
-import { clamp } from "./util.ts";
+import { clamp, countIndent } from "./util.ts";
 
 const defaultSelection: Selection = {
   start: defaultPosition,
@@ -63,12 +63,7 @@ export class Editor {
     if (!currentCursorLine) return;
     const cursorLine = currentCursorLine;
 
-    // あー、空白の数をこれで取得できるのか。
-    // 正規表現使わなくていいのか。
-    const indentLength = cursorLine.text.length -
-      cursorLine.text.trimStart().length;
-    const indentStr = cursorLine.text.slice(0, indentLength);
-
+    const indentStr = cursorLine.text.slice(0, countIndent(cursorLine.text));
     const a = cursorLine.text.slice(0, this.cursor.column);
     const b = cursorLine.text.slice(this.cursor.column, cursorLine.text.length);
     const newLines = (a +
