@@ -1,5 +1,6 @@
 .editor {
   user-select: none;
+  cursor: text;
 }
 
 .editor .cursor {

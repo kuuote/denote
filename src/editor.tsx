@@ -11,66 +11,24 @@ import React, {
 } from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
 import * as uuid from "./deps/std/uuidv1.ts";
-import { LineView } from "./line.tsx";
-import { Line, Position, Selection } from "./types.ts";
-import { Change, Commit, Revision } from "./types/commit.ts";
-import { clamp } from "./util.ts";
-
-const defaultPosition: Position = {
-  line: -1,
-  column: -1,
-};
-
-const defaultSelection: Selection = {
-  start: defaultPosition,
-  end: defaultPosition,
-};
+import {
+  defaultPosition,
+  getCharDOM,
+  LineView,
+  positionFromElement,
+} from "./line.tsx";
+import {
+  defaultSelection,
+  defaultSelectionProps,
+  Selection,
+} from "./selection.tsx";
+import { getAbsoluteRect, Rect } from "./rect.ts";
+import { Line, Position } from "./types.ts";
+import { applyCommit, makeChanges, Revision } from "./commit.ts";
+import { clamp, countIndent } from "./util.ts";
 
 /* Editor logic */
-
-function applyCommit(revision: Revision, commit: Commit): Revision {
-  if (revision.id !== commit.parentID) {
-    throw Error("commit rejected");
-  }
-  const lines = [...revision.lines];
-  for (const change of commit.changes) {
-    const idx = lines.findIndex((line) => line.id === change.id);
-    if (change.type === "insert") {
-      lines.splice(idx === -1 ? lines.length : idx, 0, {
-        text: change.text,
-        id: change.newlineID,
-      });
-    } else if (change.type === "update") {
-      lines[idx] = { ...lines[idx], text: change.text };
-    } else if (change.type === "delete") {
-      lines.splice(idx, 1);
-    }
-  }
-  return {
-    id: commit.id,
-    previous: revision,
-    lines,
-  };
-}
-
-class CoreEditor {
-  revision: Revision;
-
-  constructor(revision: Revision) {
-    this.revision = revision;
-  }
-
-  apply(changes: Change[]) {
-    this.revision = applyCommit(this.revision, {
-      id: String(uuid.generate()),
-      parentID: this.revision.id,
-      changes,
-    });
-  }
-}
-
 export class Editor {
-  #core: CoreEditor;
   cursor = defaultPosition;
   selection = defaultSelection;
 
@@ -78,12 +36,10 @@ export class Editor {
   // must be set on view
   callback = () => console.log("callback was not defined");
 
-  constructor(revision: Revision) {
-    this.#core = new CoreEditor(revision);
-  }
+  constructor(private revision: Revision) {}
 
   getLines(): Line[] {
-    return this.#core.revision.lines;
+    return this.revision.lines;
   }
 
   setCallback(callback: () => void) {
@@ -100,144 +56,35 @@ export class Editor {
     this.callback();
   }
 
+  /** 現在のカーソル位置に文字を流し込む */
   input(str: string) {
-    const changes: Change[] = [];
     const lines = this.getLines();
-    let cursorLine = lines[this.cursor.line];
-    if (cursorLine == null) return;
-    const insertLineID = lines[this.cursor.line + 1]?.id ??
-      "_end";
-    const cursor = { ...this.cursor };
-    for (
-      const { line, newline } of str.split("\n")
-        .map((line, index, self) => ({
-          line,
-          newline: index !== self.length - 1,
-        }))
-    ) {
-      const a = cursorLine.text.slice(0, cursor.column);
-      const b = cursorLine.text.slice(cursor.column, cursorLine.text.length);
-      if (newline) {
-        const text = a + line;
-        const update: Change = {
-          type: "update",
-          id: cursorLine.id,
-          text,
-        };
-        const indentLength = a.length - a.trimStart().length;
-        const insert: Change = {
-          type: "insert",
-          id: insertLineID,
-          text: a.slice(0, indentLength) + b,
-          newlineID: String(uuid.generate()),
-        };
-        changes.push(update, insert);
-        cursor.line += 1;
-        cursor.column = indentLength;
-        cursorLine = {
-          id: insert.newlineID,
-          text: insert.text,
-        };
-      } else {
-        const update: Change = {
-          type: "update",
-          id: cursorLine.id,
-          text: a + line + b,
-        };
-        changes.push(update);
-        cursor.column += line.length;
-      }
-    }
-    this.#core.apply(changes);
-    this.cursor = cursor;
+    const currentCursorLine = lines.at(this.cursor.line);
+    if (!currentCursorLine) return;
+    const cursorLine = currentCursorLine;
+
+    const indentStr = cursorLine.text.slice(0, countIndent(cursorLine.text));
+    const a = cursorLine.text.slice(0, this.cursor.column);
+    const b = cursorLine.text.slice(this.cursor.column, cursorLine.text.length);
+    const newLines = (a +
+      str.split("\n").map((line, index) =>
+        index === 0 ? line : `${indentStr}${line}`
+      ).join("\n") +
+      b).split("\n");
+
+    this.revision = applyCommit(this.revision, {
+      id: String(uuid.generate()),
+      parentID: this.revision.id,
+      changes: [
+        ...makeChanges(lines, this.cursor.line, this.cursor.line, newLines),
+      ],
+    });
+    this.cursor = {
+      line: this.cursor.line + newLines.length - 1,
+      column: newLines.at(-1)?.length ?? 0 - b.length,
+    };
     this.callback();
   }
-}
-
-/* Editor View */
-
-function positionFromElement(
-  element: Element,
-  clientX: number,
-  clientY: number,
-): Position {
-  const line = element.closest(".line");
-  const lineMatch = line?.className.match(/l-(\d+)/);
-  const lineIndex = parseInt(String(lineMatch?.[1]));
-  if (isNaN(lineIndex)) {
-    console.log("isNaN(lineIndex)");
-    return defaultPosition;
-  }
-  // lineIndexでチェックは済ませてるのでアサーションする
-  const chars = Array.from(line!.getElementsByClassName("char-index"))
-    .map((element) => {
-      const rect = element.getBoundingClientRect();
-      const medX = rect.left + (rect.width / 2);
-      const medY = rect.top + (rect.height / 2);
-      const distance = Math.pow(clientX - medX, 2) +
-        Math.pow(clientY - medY, 2);
-      return { element, distance, medX };
-    })
-    .sort((a, b) => a.distance - b.distance);
-  if (chars.length === 0) {
-    return defaultPosition;
-  }
-  const char = chars[0];
-  // Must always zero index if empty line
-  // see line.tsx
-  if (char.element.className.includes("dummy")) {
-    return {
-      line: lineIndex,
-      column: 0,
-    };
-  }
-  const charMatch = char.element.className.match(/c-(\d+)/);
-  const charIndex = parseInt(String(charMatch?.[1]));
-  if (isNaN(charIndex)) {
-    console.log("isNaN(charIndex)");
-    return defaultPosition;
-  }
-  return {
-    line: lineIndex,
-    column: clientX < char.medX ? charIndex : charIndex + 1,
-  };
-}
-
-type Rect = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-};
-
-function getAbsoluteRect(element: Element): Rect {
-  const rect = element.getBoundingClientRect();
-  return {
-    left: rect.left + window.scrollX,
-    top: rect.top + window.scrollY,
-    width: rect.width,
-    height: rect.height,
-  };
-}
-
-function getCharDOM(line: number, column: number): Element | undefined {
-  const l = document.getElementsByClassName(`l-${line}`);
-  const c = l[0]?.getElementsByClassName(`c-${column}`);
-  return c?.[0];
-}
-
-export function SelectionView(props: { rect: Rect }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        pointerEvents: "none",
-        backgroundColor: "green",
-        opacity: ".4",
-        ...props.rect,
-      }}
-    />
-  );
 }
 
 export function EditorView(props: { editor: Editor }): JSX.Element {
@@ -259,26 +106,21 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
 
   // 選択によってカーソルが移動するため選択範囲の始点を格納しておく
   const selectionStart = useRef(defaultPosition);
-  const [selectionView, setSelectionView] = useState({
-    top: { left: 0, top: 0, width: 0, height: 0 },
-    center: { left: 0, top: 0, width: 0, height: 0 },
-    bottom: { left: 0, top: 0, width: 0, height: 0 },
-  });
+  const [selectionView, setSelectionView] = useState(defaultSelectionProps);
 
-  /* カーソルの描画 */
-
+  /** クリックした位置にカーソルを動かす
+   *
+   * 同時に選択範囲を消す
+   */
   const handleClick = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
     editor.setCursor(pos);
     // 選択範囲の保持とリセット
     selectionStart.current = pos;
-    setSelectionView({
-      top: { left: 0, top: 0, width: 0, height: 0 },
-      center: { left: 0, top: 0, width: 0, height: 0 },
-      bottom: { left: 0, top: 0, width: 0, height: 0 },
-    });
+    setSelectionView(defaultSelectionProps);
   }, []);
 
+  // カーソルの描画
   useLayoutEffect(() => {
     const len = lines[cursor.line]?.text.length ?? -1;
     // カーソル行が末尾にある際は該当する DOM が無いので len - 1 で丸める
@@ -305,8 +147,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     });
   }, [cursor]);
 
-  /* 選択範囲の描画 */
-
+  /** カーソル移動で選択範囲を変更する */
   const handleMouseMove = useCallback((e: React.MouseEvent<Element>) => {
     if (e.buttons !== 1) {
       return;
@@ -334,6 +175,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     editor.setCursor(pos);
   }, []);
 
+  // 選択範囲の描画
   useLayoutEffect(() => {
     const startlen = lines[selection.start.line]?.text.length ?? -1;
     const startcol = clamp(0, selection.start.column, startlen - 1);
@@ -344,11 +186,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     const end = getCharDOM(selection.end.line, endcol);
 
     if (!start || !end) {
-      setSelectionView({
-        top: { left: 0, top: 0, width: 0, height: 0 },
-        center: { left: 0, top: 0, width: 0, height: 0 },
-        bottom: { left: 0, top: 0, width: 0, height: 0 },
-      });
+      setSelectionView(defaultSelectionProps);
       return;
     }
     const startRect = getAbsoluteRect(start);
@@ -366,9 +204,8 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
           startRect.left,
       };
       setSelectionView({
-        top: { left: 0, top: 0, width: 0, height: 0 },
+        ...defaultSelectionProps,
         center: view,
-        bottom: { left: 0, top: 0, width: 0, height: 0 },
       });
     } else {
       const lineView = document.getElementsByClassName("line").item(0)!;
@@ -428,11 +265,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
         }}
       >
       </span>
-      <span>
-        <SelectionView rect={selectionView.top} />
-        <SelectionView rect={selectionView.center} />
-        <SelectionView rect={selectionView.bottom} />
-      </span>
+      <Selection {...selectionView} />
       <textarea
         className="input"
         style={{
@@ -452,6 +285,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
       <span>
         {lines.map((line, index) => (
           <LineView
+            key={line.id}
             line={line}
             lnum={index}
           />

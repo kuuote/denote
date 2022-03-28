@@ -1,1 +1,1 @@
-export { default } from "https://esm.sh/react-dom@17.0.2?dev";
+export { default } from "https://esm.sh/react-dom@17.0.2?dev&pin=v71";
