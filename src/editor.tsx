@@ -81,7 +81,7 @@ export class Editor {
     });
     this.cursor = {
       line: this.cursor.line + newLines.length - 1,
-      column: newLines.at(-1)?.length ?? 0 - b.length,
+      column: (newLines.at(-1)?.length ?? 0) - b.length,
     };
     this.callback();
   }
