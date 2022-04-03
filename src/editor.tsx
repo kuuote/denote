@@ -85,6 +85,47 @@ export class Editor {
     };
     this.callback();
   }
+
+  backSpace() {
+    const lines = this.getLines();
+    const currentLine = lines[this.cursor.line];
+    if (this.cursor.column === 0) {
+      if (this.cursor.line === 0) {
+        return;
+      }
+      const previousLine = lines[this.cursor.line - 1];
+      this.revision = applyCommit(this.revision, {
+        id: String(uuid.generate()),
+        parentID: this.revision.id,
+        changes: [
+          ...makeChanges(lines, this.cursor.line - 1, this.cursor.line, [
+            previousLine.text + currentLine.text,
+          ]),
+        ],
+      });
+      this.cursor = {
+        line: this.cursor.line - 1,
+        column: previousLine.text.length,
+      };
+    } else {
+      const text = currentLine.text;
+      this.revision = applyCommit(this.revision, {
+        id: String(uuid.generate()),
+        parentID: this.revision.id,
+        changes: [
+          ...makeChanges(lines, this.cursor.line, this.cursor.line, [
+            text.slice(0, this.cursor.column - 1) +
+            text.slice(this.cursor.column, text.length),
+          ]),
+        ],
+      });
+      this.cursor = {
+        line: this.cursor.line,
+        column: this.cursor.column - 1,
+      };
+    }
+    this.callback();
+  }
 }
 
 export function EditorView(props: { editor: Editor }): JSX.Element {
@@ -238,10 +279,42 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
 
   /* handling textarea */
 
-  const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    editor.input(e.currentTarget.value);
-    e.currentTarget.value = "";
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      editor.input(e.currentTarget.value);
+      e.currentTarget.value = "";
+    },
+    [],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      let prevent = true;
+      if (e.ctrlKey) {
+        switch (e.key) {
+          default:
+            prevent = false;
+        }
+      } else if (e.altKey) {
+        switch (e.key) {
+          default:
+            prevent = false;
+        }
+      } else {
+        switch (e.key) {
+          case "Backspace":
+            editor.backSpace();
+            break;
+          default:
+            prevent = false;
+        }
+      }
+      if (prevent) {
+        e.preventDefault();
+      }
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     const textarea = document.getElementsByTagName("textarea")[0];
@@ -277,7 +350,8 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
           lineHeight: cursorView.height,
           opacity: 0,
         }}
-        onChange={onChange}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
         spellCheck="false"
         wrap="off"
       >
