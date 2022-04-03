@@ -2,6 +2,7 @@
 /// <reference lib="esnext" />
 /// <reference lib="dom" />
 
+import { applyCommit, Change, makeChanges, Revision } from "./commit.ts";
 import React, {
   useCallback,
   useEffect,
@@ -17,14 +18,13 @@ import {
   LineView,
   positionFromElement,
 } from "./line.tsx";
+import { getAbsoluteRect } from "./rect.ts";
 import {
   defaultSelection,
   defaultSelectionProps,
   Selection,
 } from "./selection.tsx";
-import { getAbsoluteRect, Rect } from "./rect.ts";
 import { Line, Position } from "./types.ts";
-import { applyCommit, makeChanges, Revision } from "./commit.ts";
 import { clamp, countIndent } from "./util.ts";
 
 /* Editor logic */
@@ -37,6 +37,14 @@ export class Editor {
   callback = () => console.log("callback was not defined");
 
   constructor(private revision: Revision) {}
+
+  commitChanges(changes: Change[]) {
+    this.revision = applyCommit(this.revision, {
+      id: String(uuid.generate()),
+      parentID: this.revision.id,
+      changes,
+    });
+  }
 
   getLines(): Line[] {
     return this.revision.lines;
@@ -72,13 +80,9 @@ export class Editor {
       ).join("\n") +
       b).split("\n");
 
-    this.revision = applyCommit(this.revision, {
-      id: String(uuid.generate()),
-      parentID: this.revision.id,
-      changes: [
-        ...makeChanges(lines, this.cursor.line, this.cursor.line, newLines),
-      ],
-    });
+    this.commitChanges([
+      ...makeChanges(lines, this.cursor.line, this.cursor.line, newLines),
+    ]);
     this.cursor = {
       line: this.cursor.line + newLines.length - 1,
       column: (newLines.at(-1)?.length ?? 0) - b.length,
@@ -94,31 +98,23 @@ export class Editor {
         return;
       }
       const previousLine = lines[this.cursor.line - 1];
-      this.revision = applyCommit(this.revision, {
-        id: String(uuid.generate()),
-        parentID: this.revision.id,
-        changes: [
-          ...makeChanges(lines, this.cursor.line - 1, this.cursor.line, [
-            previousLine.text + currentLine.text,
-          ]),
-        ],
-      });
+      this.commitChanges([
+        ...makeChanges(lines, this.cursor.line - 1, this.cursor.line, [
+          previousLine.text + currentLine.text,
+        ]),
+      ]);
       this.cursor = {
         line: this.cursor.line - 1,
         column: previousLine.text.length,
       };
     } else {
       const text = currentLine.text;
-      this.revision = applyCommit(this.revision, {
-        id: String(uuid.generate()),
-        parentID: this.revision.id,
-        changes: [
-          ...makeChanges(lines, this.cursor.line, this.cursor.line, [
-            text.slice(0, this.cursor.column - 1) +
-            text.slice(this.cursor.column, text.length),
-          ]),
-        ],
-      });
+      this.commitChanges([
+        ...makeChanges(lines, this.cursor.line, this.cursor.line, [
+          text.slice(0, this.cursor.column - 1) +
+          text.slice(this.cursor.column, text.length),
+        ]),
+      ]);
       this.cursor = {
         line: this.cursor.line,
         column: this.cursor.column - 1,
