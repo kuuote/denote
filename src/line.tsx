@@ -94,11 +94,12 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
 
   if (indent !== 0) {
     const indentWidth = `${1.5 * indent}em`;
+    // pad部分は文字がセットされてないとずれる
     const indentDOM = Array.from(
       Array(indent),
       (_, i) => (
         <Char key={i} column={i}>
-          <span className="pad" />
+          <span className="pad">&#009;</span>
         </Char>
       ),
     );
