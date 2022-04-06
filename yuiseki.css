@@ -1,0 +1,25 @@
+/* debugging stuff from yuiseki/settings */
+
+.indent-mark {
+  	height: 100% !important;
+  }
+  .indent-mark .pad {
+  	height: 100% !important;
+  	overflow: unset !important;
+  }
+  .indent-mark span:nth-child(4n+1) .pad {
+  	background: lightblue !important;
+  	opacity: 0.5;
+  }
+  .indent-mark span:nth-child(4n+2) .pad {
+  	background: lightpink;
+  	opacity: 0.5;
+  }
+  .indent-mark span:nth-child(4n+3) .pad {
+  	background: lightyellow;
+  	opacity: 0.5;
+  }
+  .indent-mark span:nth-child(4n+4) .pad {
+  	background: lightgreen;
+  	opacity: 0.5;
+  }

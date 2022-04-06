@@ -13,5 +13,7 @@ const editor = new Editor({
   lines,
 });
 
+window.editor = editor;
+
 const root = document.getElementById("react-root");
 ReactDOM.render(<EditorView editor={editor} />, root);

@@ -1,3 +1,9 @@
+@import "./yuiseki.css";
+
+* {
+  box-sizing: border-box;
+}
+
 .editor {
   user-select: none;
   cursor: text;
@@ -23,20 +29,32 @@
 }
 
 .line {
+  position: relative;
   display: block;
-  /* heightを設定しないと文字が無い時に潰れる */
-  min-height: 1.5em;
-  line-height: 1.5em;
+  line-height: 28px;
+  font-size: inherit;
+  /* 
+   * 空白を表示するようになる
+   * 他にもインデント部分の文字の正しい配置にも必要
+   */
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .indent-mark {
   position: absolute;
+  height: 100%;
+}
+
+.indent {
+  display: block;
 }
 
 .indent-mark .pad {
   display: inline-block;
   width: 1.5em;
   height: 1em;
+  overflow: hidden;
 }
 
 .indent-mark .dot {

@@ -98,7 +98,7 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
       Array(indent),
       (_, i) => (
         <Char key={i} column={i}>
-          <span className="pad" />
+          <span className="pad">&#009;</span>
         </Char>
       ),
     );
