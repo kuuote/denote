@@ -12,6 +12,7 @@ import React, {
 } from "./deps/react.ts";
 import { equal } from "./deps/std/asserts.ts";
 import * as uuid from "./deps/std/uuidv1.ts";
+import { TextInput } from "./input.tsx";
 import {
   defaultPosition,
   getCharDOM,
@@ -24,7 +25,7 @@ import {
   defaultSelectionProps,
   Selection,
 } from "./selection.tsx";
-import { Line, Position } from "./types.ts";
+import { CursorView, Line, Position } from "./types.ts";
 import { clamp, countIndent } from "./util.ts";
 
 /* Editor logic */
@@ -135,7 +136,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
   }, []);
 
   const lines = props.editor.getLines();
-  const [cursorView, setCursorView] = useState({
+  const [cursorView, setCursorView] = useState<CursorView>({
     left: 0,
     top: 0,
     height: 0,
@@ -273,66 +274,6 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     }
   }, [selection]);
 
-  /* handling textarea */
-
-  const [isComposition, setComposition] = useState(false);
-
-  const handleInput = () => {
-    if (isComposition) {
-      return;
-    }
-    const textarea = document.getElementsByClassName("input")?.[0];
-    if (!(textarea instanceof HTMLTextAreaElement)) {
-      throw Error("!(textarea instanceof HTMLTextAreaElement)");
-    }
-    editor.input(textarea.value);
-    textarea.value = "";
-  };
-
-  const handleCompositionStart = useCallback(() => {
-    setComposition(true);
-  }, []);
-
-  const handleCompositionEnd = useCallback(() => {
-    setComposition(false);
-    handleInput();
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      let prevent = true;
-      if (e.ctrlKey) {
-        switch (e.key) {
-          default:
-            prevent = false;
-        }
-      } else if (e.altKey) {
-        switch (e.key) {
-          default:
-            prevent = false;
-        }
-      } else {
-        switch (e.key) {
-          case "Backspace":
-            editor.backSpace();
-            break;
-          default:
-            prevent = false;
-        }
-      }
-      if (prevent) {
-        e.preventDefault();
-      }
-    },
-    [],
-  );
-
-  useLayoutEffect(() => {
-    const textarea = document.getElementsByTagName("textarea")[0];
-    if (textarea && cursorView.left > 0) {
-      setTimeout(() => textarea.focus(), 0);
-    }
-  }, [cursorView]);
 
   return (
     <span
@@ -350,25 +291,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
       >
       </span>
       <Selection {...selectionView} />
-      <textarea
-        className="input"
-        style={{
-          position: "absolute",
-          left: cursorView.left,
-          top: cursorView.top,
-          width: isComposition ? "auto" : 1,
-          height: cursorView.height,
-          lineHeight: cursorView.height,
-          opacity: isComposition ? 1 : 0,
-        }}
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        onCompositionStart={handleCompositionStart}
-        onCompositionEnd={handleCompositionEnd}
-        spellCheck="false"
-        wrap="off"
-      >
-      </textarea>
+      <TextInput editor={editor} cursorView={cursorView} />
       <span>
         {lines.map((line, index) => (
           <LineView

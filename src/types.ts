@@ -7,3 +7,9 @@ export type Line = {
   text: string;
   id: string;
 };
+
+export type CursorView = {
+  left: number;
+  top: number;
+  height: number;
+}
