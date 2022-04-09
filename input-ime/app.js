@@ -7124,12 +7124,10 @@ function EditorView(props) {
         })
     )));
 }
-const lines = [
-    "",
-    "foo",
-    " bar",
-    "  baz"
-].map((e)=>({
+const lines = `
+日本語入力ができるようになりました
+ ついでにBackSpaceによる削除もできます
+`.trim().split("\n").map((e)=>({
         text: e,
         id: String(generate())
     })
