@@ -88,8 +88,12 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
       {c}
     </Char>
   ));
-  if (textDOM.length + indent === 0) {
-    textDOM.push(<Char column={0} dummy>&#8203;</Char>);
+  if (textDOM.length === 0) {
+    if (indent === 0) {
+      textDOM.push(<Char column={0} dummy>&#8203;</Char>);
+    } else {
+      textDOM.push(<br />);
+    }
   }
 
   if (indent !== 0) {
