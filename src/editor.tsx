@@ -274,7 +274,6 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
     }
   }, [selection]);
 
-
   return (
     <span
       className="editor"

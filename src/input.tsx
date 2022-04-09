@@ -2,10 +2,17 @@ import React, { useCallback, useLayoutEffect, useState } from "./deps/react.ts";
 import { Editor } from "./editor.tsx";
 import { CursorView } from "./types.ts";
 
+const className = "input";
+
 type Props = {
   editor: Editor;
   cursorView: CursorView;
 };
+
+function getInputElement(): HTMLTextAreaElement | undefined {
+  const e = document.getElementsByClassName(className);
+  return e[0] instanceof HTMLTextAreaElement ? e[0] : void 0;
+}
 
 export function TextInput({ editor, cursorView }: Props): JSX.Element {
   const [isComposition, setComposition] = useState(false);
@@ -14,9 +21,9 @@ export function TextInput({ editor, cursorView }: Props): JSX.Element {
     if (isComposition) {
       return;
     }
-    const textarea = document.getElementsByClassName("input")?.[0];
-    if (!(textarea instanceof HTMLTextAreaElement)) {
-      throw Error("!(textarea instanceof HTMLTextAreaElement)");
+    const textarea = getInputElement();
+    if (textarea == null) {
+      throw Error("textarea == null");
     }
     editor.input(textarea.value);
     textarea.value = "";
@@ -61,14 +68,14 @@ export function TextInput({ editor, cursorView }: Props): JSX.Element {
   );
 
   useLayoutEffect(() => {
-    const textarea = document.getElementsByTagName("textarea")[0];
-    if (textarea && cursorView.left > 0) {
+    const textarea = getInputElement();
+    if (textarea != null && cursorView.left > 0) {
       setTimeout(() => textarea.focus(), 0);
     }
   }, [cursorView]);
   return (
     <textarea
-      className="input"
+      className={className}
       style={{
         position: "absolute",
         left: cursorView.left,

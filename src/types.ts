@@ -12,4 +12,4 @@ export type CursorView = {
   left: number;
   top: number;
   height: number;
-}
+};
