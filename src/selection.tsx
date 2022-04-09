@@ -17,7 +17,7 @@ export const defaultSelectionProps = {
   bottom: { left: 0, top: 0, width: 0, height: 0 },
 };
 
-const SelectionView: React.FC<{ rect: Rect }> = ({ rect }) => (
+const Rect: React.FC<{ rect: Rect }> = ({ rect }) => (
   <div
     style={{
       position: "absolute",
@@ -28,12 +28,14 @@ const SelectionView: React.FC<{ rect: Rect }> = ({ rect }) => (
     }}
   />
 );
-export function Selection(props: { top: Rect; center: Rect; bottom: Rect }) {
+export function SelectionView(
+  props: { top: Rect; center: Rect; bottom: Rect },
+) {
   return (
     <span>
-      <SelectionView rect={props.top} />
-      <SelectionView rect={props.center} />
-      <SelectionView rect={props.bottom} />
+      <Rect rect={props.top} />
+      <Rect rect={props.center} />
+      <Rect rect={props.bottom} />
     </span>
   );
 }

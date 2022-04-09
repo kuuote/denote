@@ -23,9 +23,9 @@ import { getAbsoluteRect } from "./rect.ts";
 import {
   defaultSelection,
   defaultSelectionProps,
-  Selection,
+  SelectionView,
 } from "./selection.tsx";
-import { CursorView, Line, Position } from "./types.ts";
+import { CursorView, Line, Position, Selection } from "./types.ts";
 import { clamp, countIndent } from "./util.ts";
 
 /* Editor logic */
@@ -289,7 +289,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
         }}
       >
       </span>
-      <Selection {...selectionView} />
+      <SelectionView {...selectionView} />
       <TextInput editor={editor} cursorView={cursorView} />
       <span>
         {lines.map((line, index) => (
