@@ -26,7 +26,7 @@ import {
   SelectionView,
 } from "./selection.tsx";
 import { CursorView, Line, Position, Selection } from "./types.ts";
-import { clamp, countIndent } from "./util.ts";
+import { clamp, countIndent, selectedTextFromLines } from "./util.ts";
 
 /* Editor logic */
 export class Editor {
@@ -68,26 +68,47 @@ export class Editor {
   /** 現在のカーソル位置に文字を流し込む */
   input(str: string) {
     const lines = this.getLines();
-    const currentCursorLine = lines.at(this.cursor.line);
-    if (!currentCursorLine) return;
-    const cursorLine = currentCursorLine;
+    if (this.selection.start.line === -1) {
+      const currentCursorLine = lines.at(this.cursor.line);
+      if (!currentCursorLine) return;
+      const cursorLine = currentCursorLine;
 
-    const indentStr = cursorLine.text.slice(0, countIndent(cursorLine.text));
-    const a = cursorLine.text.slice(0, this.cursor.column);
-    const b = cursorLine.text.slice(this.cursor.column, cursorLine.text.length);
-    const newLines = (a +
-      str.split("\n").map((line, index) =>
-        index === 0 ? line : `${indentStr}${line}`
-      ).join("\n") +
-      b).split("\n");
+      const indentStr = cursorLine.text.slice(0, countIndent(cursorLine.text));
+      const a = cursorLine.text.slice(0, this.cursor.column);
+      const b = cursorLine.text.slice(
+        this.cursor.column,
+        cursorLine.text.length,
+      );
+      const newLines = (a +
+        str.split("\n").map((line, index) =>
+          index === 0 ? line : `${indentStr}${line}`
+        ).join("\n") +
+        b).split("\n");
 
-    this.commitChanges([
-      ...makeChanges(lines, this.cursor.line, this.cursor.line, newLines),
-    ]);
-    this.cursor = {
-      line: this.cursor.line + newLines.length - 1,
-      column: (newLines.at(-1)?.length ?? 0) - b.length,
-    };
+      this.commitChanges([
+        ...makeChanges(lines, this.cursor.line, this.cursor.line, newLines),
+      ]);
+      this.cursor = {
+        line: this.cursor.line + newLines.length - 1,
+        column: (newLines.at(-1)?.length ?? 0) - b.length,
+      };
+    } else {
+      const [start, , end] = selectedTextFromLines(lines, this.selection);
+      const newLines = (start + str + end).split("\n");
+      this.commitChanges([
+        ...makeChanges(
+          lines,
+          this.selection.start.line,
+          this.selection.end.line,
+          newLines,
+        ),
+      ]);
+      this.cursor = {
+        line: this.selection.start.line + (newLines.length - 1),
+        column: newLines[newLines.length - 1].length - end.length,
+      };
+      this.selection = defaultSelection;
+    }
     this.callback();
   }
 
@@ -153,6 +174,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
   const handleClick = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
     editor.setCursor(pos);
+    editor.setSelection(defaultSelection);
     // 選択範囲の保持とリセット
     selectionStart.current = pos;
     setSelectionView(defaultSelectionProps);
