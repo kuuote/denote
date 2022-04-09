@@ -13,3 +13,8 @@ export type CursorView = {
   top: number;
   height: number;
 };
+
+export type Selection = {
+  start: Position;
+  end: Position;
+};

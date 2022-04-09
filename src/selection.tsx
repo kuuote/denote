@@ -5,12 +5,7 @@
 import React from "./deps/react.ts";
 import { defaultPosition } from "./line.tsx";
 import { Rect } from "./rect.ts";
-import { Position } from "./types.ts";
-
-export type Selection = {
-  start: Position;
-  end: Position;
-};
+import { Selection } from "./types.ts";
 
 export const defaultSelection: Selection = {
   start: defaultPosition,
