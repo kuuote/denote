@@ -275,13 +275,28 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
 
   /* handling textarea */
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      editor.input(e.currentTarget.value);
-      e.currentTarget.value = "";
-    },
-    [],
-  );
+  const [isComposition, setComposition] = useState(false);
+
+  const handleInput = () => {
+    if (isComposition) {
+      return;
+    }
+    const textarea = document.getElementsByClassName("input")?.[0];
+    if (!(textarea instanceof HTMLTextAreaElement)) {
+      throw Error("!(textarea instanceof HTMLTextAreaElement)");
+    }
+    editor.input(textarea.value);
+    textarea.value = "";
+  };
+
+  const handleCompositionStart = useCallback(() => {
+    setComposition(true);
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    setComposition(false);
+    handleInput();
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -341,13 +356,15 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
           position: "absolute",
           left: cursorView.left,
           top: cursorView.top,
-          width: 1,
+          width: isComposition ? "auto" : 1,
           height: cursorView.height,
           lineHeight: cursorView.height,
-          opacity: 0,
+          opacity: isComposition ? 1 : 0,
         }}
-        onChange={handleChange}
+        onInput={handleInput}
         onKeyDown={handleKeyDown}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         spellCheck="false"
         wrap="off"
       >
