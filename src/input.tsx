@@ -1,6 +1,12 @@
-import React, { useCallback, useLayoutEffect, useState } from "./deps/react.ts";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "./deps/react.ts";
 import { Editor } from "./editor.tsx";
 import { CursorView } from "./types.ts";
+import { selectedTextFromLines } from "./util.ts";
 
 const className = "input";
 
@@ -73,6 +79,22 @@ export function TextInput({ editor, cursorView }: Props): JSX.Element {
       setTimeout(() => textarea.focus(), 0);
     }
   }, [cursorView]);
+
+  useEffect(() => {
+    const textarea = getInputElement();
+    if (textarea == null) {
+      return;
+    }
+    const selection = editor.selection;
+    if (selection.start.line !== -1) {
+      const [, text] = selectedTextFromLines(editor.getLines(), selection);
+      textarea.value = text;
+      textarea.select();
+    } else {
+      textarea.value = "";
+    }
+  }, [editor.selection]);
+
   return (
     <textarea
       className={className}
