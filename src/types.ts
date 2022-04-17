@@ -6,6 +6,10 @@ export type Position = {
 export type Line = {
   text: string;
   id: string;
+  cache?: {
+    key: string;
+    element: JSX.Element;
+  }
 };
 
 export type CursorView = {

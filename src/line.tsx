@@ -3,8 +3,8 @@
 /// <reference lib="dom" />
 
 import React from "./deps/react.ts";
+import { IndexedNode, parseLine } from "./parseline.ts";
 import { Line, Position } from "./types.ts";
-import { countIndent } from "./util.ts";
 
 export function getCharDOM(line: number, column: number): Element | undefined {
   const l = document.getElementsByClassName(`l-${line}`);
@@ -80,47 +80,76 @@ const Line: React.FC<{ line: number }> = (
   </div>
 );
 
-export function LineView(props: { line: Line; lnum: number }): JSX.Element {
-  const str = props.line.text.trimStart();
-  const indent = countIndent(props.line.text);
-  const textDOM = [...str].map((c, i) => (
-    <Char key={`${i}-${c}`} column={i + indent}>
-      {c}
-    </Char>
-  ));
-  if (textDOM.length === 0) {
-    if (indent === 0) {
-      textDOM.push(<Char column={0} dummy>&#8203;</Char>);
-    } else {
-      textDOM.push(<br />);
+function mapToElement(node: IndexedNode): JSX.Element {
+  if (node.type === "character") {
+    return <Char key={node.index} column={node.index}>{node.character}</Char>;
+  }
+  const inner = node.inner.map(mapToElement);
+  if (node.type === "bracket") {
+    return <a href="blah">{inner}</a>;
+  }
+  if (node.type === "inlineCode") {
+    return <code>{inner}</code>;
+  }
+  if (node.type === "decoration") {
+    if (node.decorationType === "*") {
+      return <strong>{inner}</strong>;
+    }
+    if (node.decorationType === "/") {
+      return <i>{inner}</i>
+    }
+    if (node.decorationType === "-") {
+      return <del>{inner}</del>;
     }
   }
+  return <>{inner}</>;
+}
 
-  if (indent !== 0) {
-    const indentWidth = `${1.5 * indent}em`;
-    // pad部分は文字がセットされてないとずれる
-    const indentDOM = Array.from(
-      Array(indent),
-      (_, i) => (
-        <Char key={i} column={i}>
-          <span className="pad">&#009;</span>
-        </Char>
-      ),
-    );
-    indentDOM.push(<span className="dot" />);
-    return (
-      <Line line={props.lnum}>
-        <span
-          className="indent-mark"
-          style={{ width: indentWidth }}
-        >
-          {indentDOM}
-        </span>
-        <span className="indent" style={{ marginLeft: indentWidth }}>
-          {textDOM}
-        </span>
-      </Line>
-    );
+export function LineView(props: { line: Line; lnum: number }): JSX.Element {
+  if (props.line.cache == null || props.line.text !== props.line.cache.key) {
+    const [indent, node] = parseLine(props.line.text);
+    const textDOM = node.map(mapToElement);
+    if (textDOM.length === 0) {
+      if (indent === 0) {
+        textDOM.push(<Char column={0} dummy>&#8203;</Char>);
+      } else {
+        textDOM.push(<br />);
+      }
+    }
+    if (indent !== 0) {
+      const indentWidth = `${1.5 * indent}em`;
+      // pad部分は文字がセットされてないとずれる
+      const indentDOM = Array.from(
+        Array(indent),
+        (_, i) => (
+          <Char key={i} column={i}>
+            <span className="pad">&#009;</span>
+          </Char>
+        ),
+      );
+      indentDOM.push(<span className="dot" />);
+      props.line.cache = {
+        key: props.line.text,
+        element: (
+          <>
+            <span
+              className="indent-mark"
+              style={{ width: indentWidth }}
+            >
+              {indentDOM}
+            </span>
+            <span className="indent" style={{ marginLeft: indentWidth }}>
+              {textDOM}
+            </span>
+          </>
+        ),
+      };
+    } else {
+      props.line.cache = {
+        key: props.line.text,
+        element: <>{textDOM}</>,
+      };
+    }
   }
-  return <Line line={props.lnum}>{textDOM}</Line>;
+  return <Line line={props.lnum}>{props.line.cache.element}</Line>;
 }
