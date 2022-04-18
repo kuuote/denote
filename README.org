@@ -1,5 +1,6 @@
 - これは何？
   - 遊びで作っているScrapboxのCloneです
+  - 詳しくは[[https://scrapbox.io/kuuote/denote]]に書いています
 - 動かし方
   - [[https://deno.land][Deno]]を導入して ~./script/serve~ を実行するとバンドルされて簡易サーバーが起動します
   - 詳しくはスクリプトの中身を見てください
