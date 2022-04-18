@@ -128,8 +128,10 @@ function processNode(parsed: Parsed, counter: () => number): IndexedNode {
         const label = (m[1] + m[3]).trim();
         const labelStart = text.indexOf(label);
         const labelEnd = labelStart + label.length - 1;
-        for (let i = 0; i < inner.length; i++) {
-          inner[i].notation = i < labelStart || labelEnd < i;
+        if (label !== "") {
+          for (let i = 0; i < inner.length; i++) {
+            inner[i].notation = i < labelStart || labelEnd < i;
+          }
         }
         return {
           type: "anchor",
