@@ -5,7 +5,7 @@ import { Editor, EditorView } from "./editor.tsx";
 
 const lines = [
   "[denote https://github.com/kuuote/denote]のデモです",
-  "\tScrapboxに似た記法をいくつかサポートしています",
+  "\t[https://scrapbox.io/help-jp/ブラケティング Scrapboxの記法]に似た物をいくつかサポートしています",
   "\t\t[リンク]",
   "\t\t[* 太字]",
   "\t\t[/ 斜体]",
@@ -21,6 +21,9 @@ const editor = new Editor({
   id: String(uuid.generate()),
   lines,
 });
+
+// deno-lint-ignore no-explicit-any
+(window as any).editor = editor;
 
 const root = document.getElementById("react-root");
 ReactDOM.render(<EditorView editor={editor} />, root);

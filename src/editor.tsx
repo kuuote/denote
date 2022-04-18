@@ -167,12 +167,33 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
   const selectionStart = useRef(defaultPosition);
   const [selectionView, setSelectionView] = useState(defaultSelectionProps);
 
+  const handleClick = useCallback((e: React.MouseEvent<Element>) => {
+    const t = e.target as Element;
+    const anchor = t.closest("a");
+    if (anchor != null) {
+      console.log(anchor);
+      if (anchor.closest(".cursor-line") != null) {
+        console.log("prevent");
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }, []);
+
   /** クリックした位置にカーソルを動かす
    *
    * 同時に選択範囲を消す
    */
-  const handleClick = useCallback((e: React.MouseEvent<Element>) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent<Element>) => {
     const pos = positionFromElement(e.target as Element, e.clientX, e.clientY);
+
+    const t = e.target as Element;
+    const anchor = t.closest("a");
+    if (anchor != null && pos.line !== editor.cursor.line) {
+      e.preventDefault();
+      return;
+    }
+
     editor.setCursor(pos);
     editor.setSelection(defaultSelection);
     // 選択範囲の保持とリセット
@@ -299,7 +320,8 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
   return (
     <span
       className="editor"
-      onMouseDown={handleClick}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
     >
       <span

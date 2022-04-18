@@ -2,6 +2,18 @@
   box-sizing: border-box;
 }
 
+a {
+  color: teal;
+}
+
+a:visited {
+  color: teal;
+}
+
+.cursor-line a {
+  cursor: text;
+}
+
 .editor {
   user-select: none;
   cursor: text;
