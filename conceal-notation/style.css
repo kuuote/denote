@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: teal;
+}
+
+a:visited {
+  color: teal;
+}
+
+.cursor-line a {
+  cursor: text;
+}
+
+.editor {
+  user-select: none;
+  cursor: text;
+}
+
+.editor .cursor {
+  position: absolute;
+  background-color: black;
+  width: 1px;
+}
+
+.editor .input {
+  position: absolute;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: text;
+  outline: none;
+  overflow: hidden;
+  padding: 0;
+  pointer-events: none;
+  resize: none;
+}
+
+.line {
+  /*
+   * .lineのrelativeと
+   * .indent-markのabsoluteによりインデント部分を正しい位置に配置する
+   */
+  position: relative;
+  display: block;
+  line-height: 1.5em;
+  /*
+   * 空白を表示するようになる
+   * 他にもインデント部分の文字の正しい配置にも必要
+   */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.line:not(.cursor-line) .notation {
+  display: inline-block;
+  visibility: hidden;
+  width: 0px;
+}
+
+.indent-mark {
+  position: absolute;
+}
+
+.indent {
+  /* 折り返し時にインデント部分にはみ出さなくする */
+  display: block;
+}
+
+.indent-mark .pad {
+  display: inline-block;
+  width: 1.5em;
+  height: 1em;
+  overflow: hidden;
+}
+
+.indent-mark .dot {
+  position: absolute;
+  display: block;
+  right: 9px;
+  top: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: black;
+}
