@@ -319,6 +319,7 @@ export function EditorView(props: { editor: Editor }): JSX.Element {
             key={line.id}
             line={line}
             lnum={index}
+            cursor={index === editor.cursor.line}
           />
         ))}
       </span>

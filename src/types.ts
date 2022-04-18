@@ -9,7 +9,7 @@ export type Line = {
   cache?: {
     key: string;
     element: JSX.Element;
-  }
+  };
 };
 
 export type CursorView = {

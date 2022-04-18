@@ -51,10 +51,16 @@ type Character = {
   type: "character";
   character: string;
   index: number;
+  notation: boolean; // 通常は隠れる記法部分
 };
 
 type BaseNode = {
   inner: IndexedNode[];
+};
+
+type Bracket = {
+  type: "bracket";
+  text: string;
 };
 
 type Decoration = {
@@ -68,16 +74,11 @@ type PlainNode = {
     | "unknown";
 };
 
-type TextNode = {
-  type: "bracket";
-  text: string;
-};
-
 export type IndexedNode =
   | (
+    | Bracket
     | Decoration
     | PlainNode
-    | TextNode
   )
     & BaseNode
   | Character;
@@ -88,9 +89,14 @@ function processNode(parsed: Parsed, counter: () => number): IndexedNode {
       type: "character",
       character: parsed,
       index: counter(),
+      notation: false,
     };
   } else {
     const inner = parsed.inner.map((p) => processNode(p, counter));
+
+    // 以下は囲い付きノード
+    (inner[0] as Character).notation = true;
+    (inner[inner.length - 1] as Character).notation = true;
     if (parsed.type === "inlineCode") {
       return {
         type: "inlineCode",
@@ -104,8 +110,8 @@ function processNode(parsed: Parsed, counter: () => number): IndexedNode {
         inner,
       };
     }
-    if (parsed.inner.every((v): v is string => typeof v === "string")) {
-      const text = parsed.inner.join("");
+    if (inner.every((n): n is Character => n.type === "character")) {
+      const text = inner.map((n) => n.character).join("");
       return {
         type: "bracket",
         text,

@@ -64,25 +64,34 @@ export function positionFromElement(
   };
 }
 
-const Char: React.FC<{ column: number; dummy?: boolean }> = (
-  { column, children, dummy },
-) => (
-  <span className={`char-index${dummy ? " dummy" : ""} c-${column}`}>
-    {children}
-  </span>
-);
+const Char: React.FC<{ column: number; notation?: boolean; dummy?: boolean }> =
+  (
+    { column, notation, children, dummy },
+  ) => (
+    <span
+      className={`char-index${dummy ? " dummy" : ""} ${
+        notation ? "notation" : ""
+      } c-${column}`}
+    >
+      {children}
+    </span>
+  );
 
-const Line: React.FC<{ line: number }> = (
-  { line, children },
+const Line: React.FC<{ line: number; cursor: boolean }> = (
+  { line, cursor, children },
 ) => (
-  <div className={`line l-${line}`}>
+  <div className={`line l-${line} ${cursor ? "cursor-line" : ""}`}>
     {children}
   </div>
 );
 
 function mapToElement(node: IndexedNode): JSX.Element {
   if (node.type === "character") {
-    return <Char key={node.index} column={node.index}>{node.character}</Char>;
+    return (
+      <Char key={node.index} column={node.index} notation={node.notation}>
+        {node.character}
+      </Char>
+    );
   }
   const inner = node.inner.map(mapToElement);
   if (node.type === "bracket") {
@@ -96,7 +105,7 @@ function mapToElement(node: IndexedNode): JSX.Element {
       return <strong>{inner}</strong>;
     }
     if (node.decorationType === "/") {
-      return <i>{inner}</i>
+      return <i>{inner}</i>;
     }
     if (node.decorationType === "-") {
       return <del>{inner}</del>;
@@ -105,7 +114,9 @@ function mapToElement(node: IndexedNode): JSX.Element {
   return <>{inner}</>;
 }
 
-export function LineView(props: { line: Line; lnum: number }): JSX.Element {
+export function LineView(
+  props: { line: Line; lnum: number; cursor: boolean },
+): JSX.Element {
   if (props.line.cache == null || props.line.text !== props.line.cache.key) {
     const [indent, node] = parseLine(props.line.text);
     const textDOM = node.map(mapToElement);
@@ -151,5 +162,9 @@ export function LineView(props: { line: Line; lnum: number }): JSX.Element {
       };
     }
   }
-  return <Line line={props.lnum}>{props.line.cache.element}</Line>;
+  return (
+    <Line line={props.lnum} cursor={props.cursor}>
+      {props.line.cache.element}
+    </Line>
+  );
 }

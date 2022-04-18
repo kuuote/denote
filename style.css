@@ -42,6 +42,12 @@
   word-wrap: break-word;
 }
 
+.line:not(.cursor-line) .notation {
+  display: inline-block;
+  visibility: hidden;
+  width: 0px;
+}
+
 .indent-mark {
   position: absolute;
 }
