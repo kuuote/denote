@@ -4,7 +4,7 @@ import * as uuid from "./deps/std/uuidv1.ts";
 import { Editor, EditorView } from "./editor.tsx";
 
 const lines = [
-  "denoteのデモです",
+  "[denote https://github.com/kuuote/denote]のデモです",
   "\tScrapboxに似た記法をいくつかサポートしています",
   "\t\t[リンク]",
   "\t\t[* 太字]",

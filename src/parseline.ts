@@ -58,6 +58,11 @@ type BaseNode = {
   inner: IndexedNode[];
 };
 
+type Anchor = {
+  type: "anchor";
+  url: string;
+};
+
 type Bracket = {
   type: "bracket";
   text: string;
@@ -76,12 +81,15 @@ type PlainNode = {
 
 export type IndexedNode =
   | (
+    | Anchor
     | Bracket
     | Decoration
     | PlainNode
   )
     & BaseNode
   | Character;
+
+const urlRegexp = /\[(.*?)(https?:\/\/[^\s\]]+)(.*)\]/;
 
 function processNode(parsed: Parsed, counter: () => number): IndexedNode {
   if (typeof parsed === "string") {
@@ -112,6 +120,24 @@ function processNode(parsed: Parsed, counter: () => number): IndexedNode {
     }
     if (inner.every((n): n is Character => n.type === "character")) {
       const text = inner.map((n) => n.character).join("");
+
+      const m = text.match(urlRegexp);
+
+      if (m != null) {
+        const url = m[2];
+        const label = (m[1] + m[3]).trim();
+        const labelStart = text.indexOf(label);
+        const labelEnd = labelStart + label.length - 1;
+        for (let i = 0; i < inner.length; i++) {
+          inner[i].notation = i < labelStart || labelEnd < i;
+        }
+        return {
+          type: "anchor",
+          url,
+          inner,
+        };
+      }
+
       return {
         type: "bracket",
         text,
