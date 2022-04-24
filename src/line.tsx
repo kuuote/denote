@@ -95,7 +95,7 @@ function mapToElement(node: IndexedNode): JSX.Element {
   }
   const inner = node.inner.map(mapToElement);
   if (node.type === "bracket") {
-    return <a href="blah">{inner}</a>;
+    return <a href={node.text.slice(1, -1)}>{inner}</a>;
   }
   if (node.type === "anchor") {
     return <a href={node.url}>{inner}</a>;
