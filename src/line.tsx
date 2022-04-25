@@ -29,29 +29,32 @@ export function positionFromElement(
     console.log("isNaN(lineIndex)");
     return defaultPosition;
   }
-  // lineIndexでチェックは済ませてるのでアサーションする
-  const chars = Array.from(line!.getElementsByClassName("char-index"))
+  // 行の全文字を取得、ターゲット地点との平方ユークリッド距離を算出
+  // 近い順に並び換える(後でminbyに変える)
+  const chars = Array.from(line?.getElementsByClassName("char-index") ?? [])
+    .filter((element) => !element.className.includes("dummy"))
     .map((element) => {
       const rect = element.getBoundingClientRect();
       const medX = rect.left + (rect.width / 2);
       const medY = rect.top + (rect.height / 2);
       const distance = Math.pow(clientX - medX, 2) +
         Math.pow(clientY - medY, 2);
-      return { element, distance, medX };
+      return { element, distance, rect, medX };
     })
     .sort((a, b) => a.distance - b.distance);
-  if (chars.length === 0) {
-    return defaultPosition;
-  }
-  const char = chars[0];
-  // Must always zero index if empty line
-  // see line.tsx
-  if (char.element.className.includes("dummy")) {
+
+  // ターゲット地点より右下に要素の底及び端が無い場所を末尾と規定する
+  // 距離だけを見ているため単純にやると折り返し前の要素に反応してしまう
+  const tail =
+    chars.find(({ rect }) => clientX < rect.right && clientY < rect.bottom) ==
+      null;
+  if (tail) {
     return {
       line: lineIndex,
-      column: 0,
+      column: chars.length,
     };
   }
+  const char = chars[0];
   const charMatch = char.element.className.match(/c-(\d+)/);
   const charIndex = parseInt(String(charMatch?.[1]));
   if (isNaN(charIndex)) {
