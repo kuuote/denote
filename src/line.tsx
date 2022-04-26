@@ -3,6 +3,7 @@
 /// <reference lib="dom" />
 
 import React from "./deps/react.ts";
+import { minBy } from "./deps/std/collections.ts";
 import { IndexedNode, parseLine } from "./parseline.ts";
 import { Line, Position } from "./types.ts";
 
@@ -30,7 +31,6 @@ export function positionFromElement(
     return defaultPosition;
   }
   // 行の全文字を取得、ターゲット地点との平方ユークリッド距離を算出
-  // 近い順に並び換える(後でminbyに変える)
   const chars = Array.from(line?.getElementsByClassName("char-index") ?? [])
     .filter((element) => !element.className.includes("dummy"))
     .map((element) => {
@@ -40,21 +40,21 @@ export function positionFromElement(
       const distance = Math.pow(clientX - medX, 2) +
         Math.pow(clientY - medY, 2);
       return { element, distance, rect, medX };
-    })
-    .sort((a, b) => a.distance - b.distance);
+    });
 
   // ターゲット地点より右下に要素の底及び端が無い場所を末尾と規定する
   // 距離だけを見ているため単純にやると折り返し前の要素に反応してしまう
-  const tail =
-    chars.find(({ rect }) => clientX < rect.right && clientY < rect.bottom) ==
-      null;
-  if (tail) {
+  const tailRect = chars.at(-1)?.rect;
+  if (
+    tailRect == null || clientX >= tailRect.right && clientY >= tailRect.top
+  ) {
     return {
       line: lineIndex,
       column: chars.length,
     };
   }
-  const char = chars[0];
+  // charsが空の場合tailRectの取得ができないのでアサーション可
+  const char = minBy(chars, (char) => char.distance)!;
   const charMatch = char.element.className.match(/c-(\d+)/);
   const charIndex = parseInt(String(charMatch?.[1]));
   if (isNaN(charIndex)) {
