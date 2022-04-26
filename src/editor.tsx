@@ -65,6 +65,25 @@ export class Editor {
     this.callback();
   }
 
+  moveCursor(forward: boolean) {
+    const cursor = this.cursor;
+    const lines = this.getLines();
+    if (cursor.column === (forward ? lines[cursor.line].text.length : 0)) {
+      if (cursor.line === (forward ? lines.length - 1 : 0)) {
+        return;
+      }
+      this.setCursor({
+        line: cursor.line + (forward ? 1 : -1),
+        column: forward ? 0 : lines[cursor.line - 1].text.length,
+      });
+    } else {
+      this.setCursor({
+        line: cursor.line,
+        column: cursor.column + (forward ? 1 : -1),
+      });
+    }
+  }
+
   /** 現在のカーソル位置に文字を流し込む */
   input(str: string) {
     const lines = this.getLines();

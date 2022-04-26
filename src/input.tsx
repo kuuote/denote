@@ -59,6 +59,12 @@ export function TextInput({ editor, cursorView }: Props): JSX.Element {
         }
       } else {
         switch (e.key) {
+          case "ArrowLeft":
+            editor.moveCursor(false);
+            break;
+          case "ArrowRight":
+            editor.moveCursor(true);
+            break;
           case "Backspace":
             editor.backSpace();
             break;
