@@ -132,6 +132,10 @@ export class Editor {
   }
 
   backSpace() {
+    if (this.selection !== defaultSelection) {
+      this.input("");
+      return;
+    }
     const lines = this.getLines();
     const currentLine = lines[this.cursor.line];
     if (this.cursor.column === 0) {
