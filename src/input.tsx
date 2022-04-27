@@ -22,17 +22,24 @@ function getInputElement(): HTMLTextAreaElement | undefined {
 
 export function TextInput({ editor, cursorView }: Props): JSX.Element {
   const [isComposition, setComposition] = useState(false);
+  const [width, setWidth] = useState(1);
 
   const handleInput = () => {
-    if (isComposition) {
-      return;
-    }
     const textarea = getInputElement();
     if (textarea == null) {
       throw Error("textarea == null");
     }
-    editor.input(textarea.value);
-    textarea.value = "";
+    if (isComposition) {
+      const oldWidth = textarea.style.width;
+      textarea.style.width = "0px";
+      setWidth(textarea.scrollWidth);
+      textarea.style.width = oldWidth;
+      return;
+    } else {
+      setWidth(1);
+      editor.input(textarea.value);
+      textarea.value = "";
+    }
   };
 
   const handleCompositionStart = useCallback(() => {
@@ -108,7 +115,7 @@ export function TextInput({ editor, cursorView }: Props): JSX.Element {
         position: "absolute",
         left: cursorView.left,
         top: cursorView.top,
-        width: isComposition ? "auto" : 1,
+        width: width + "px",
         height: cursorView.height,
         lineHeight: cursorView.height,
         opacity: isComposition ? 1 : 0,
