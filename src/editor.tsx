@@ -2,7 +2,13 @@
 /// <reference lib="esnext" />
 /// <reference lib="dom" />
 
-import { applyCommit, Change, makeChanges, Revision } from "./commit.ts";
+import {
+  applyCommit,
+  Change,
+  Commit,
+  makeChanges,
+  Revision,
+} from "./commit.ts";
 import React, {
   useCallback,
   useEffect,
@@ -28,10 +34,20 @@ import {
 import { CursorView, Line, Position, Selection } from "./types.ts";
 import { clamp, countIndent, selectedTextFromLines } from "./util.ts";
 
+type HandlerMap = {
+  commit: Commit;
+};
+
+type Handlers = {
+  [K in keyof HandlerMap]?: ((value: HandlerMap[K]) => void)[];
+};
+
 /* Editor logic */
 export class Editor {
   cursor = defaultPosition;
   selection = defaultSelection;
+
+  handlers: Handlers = {};
 
   // rendering callback
   // must be set on view
@@ -39,12 +55,28 @@ export class Editor {
 
   constructor(private revision: Revision) {}
 
+  on<K extends keyof HandlerMap>(
+    type: K,
+    handler: (value: HandlerMap[K]) => void,
+  ) {
+    this.handlers[type] ??= [];
+    this.handlers[type]?.push(handler);
+  }
+
+  emit<K extends keyof HandlerMap>(type: K, value: HandlerMap[K]) {
+    for (const handler of this.handlers[type] ?? []) {
+      handler(value);
+    }
+  }
+
   commitChanges(changes: Change[]) {
-    this.revision = applyCommit(this.revision, {
+    const commit: Commit = {
       id: String(uuid.generate()),
       parentID: this.revision.id,
       changes,
-    });
+    };
+    this.revision = applyCommit(this.revision, commit);
+    this.emit("commit", commit);
   }
 
   getLines(): Line[] {
